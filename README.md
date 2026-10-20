@@ -3,9 +3,9 @@
 ## Jogo completo (versão 1)
 
 - **Solo:** abra `index.html` e clique em **Novo jogo** (abertura + jogo) ou em **Continuar**.
-- **Cooperativo (até 8):** `node servidor/servidor.js` e abra `http://localhost:8080`. Em Opções → Multijogador, crie uma sala e passe o código; os amigos usam "Entrar numa sala".
+- **Cooperativo (até 8):** `node servidor.js` e abra `http://localhost:8080`. Em Opções → Multijogador, crie uma sala e passe o código; os amigos usam "Entrar numa sala".
 - Controles: WASD anda, Espaço/clique usa, F/clique direito interage, 1–8 hotbar, E inventário, B construção, Q missões, C atributos, M mapa, H Doidobot, J jutsu, T chat, Esc opções (todos remapeáveis).
-- Código do jogo em `jogo/` (mundo, jogador, criaturas, sistemas, missões, construção, masmorras, render, UI, rede) e servidor em `servidor/`.
+- Os arquivos JavaScript, CSS e a fonte estão na raiz do repositório. O servidor cooperativo fica em `servidor.js`.
 
 ### Roadmap
 - Feito: mundo com 6 biomas, estações e clima, fome e sede, plantio e estufa, construção bloco a bloco e plantas prontas, animais com abrigo e calor, criaturas, 5 masmorras com chefes, Guilda e missões, níveis e atributos, lojas e loja própria, carrinho e balão, tutorial, Doidobot, acessibilidade, multijogador e salvamento na nuvem (servidor).
@@ -49,10 +49,10 @@ O menu de opções pausa a cena.
 
 | Arquivo | O que faz |
 |---|---|
-| `js/motor.js` | resolução em pixels, cores, esperas e animações do roteiro |
-| `js/som.js` | efeitos, voz de bipes do Doidobot e trilha que muda com a cena (Web Audio) |
-| `js/cenario.js` | céu, serras, Guilda, floresta, campina, árvore e moita |
-| `js/personagens.js` | jogador, sprite do Doidobot (e modo humano), passarinhos, partículas |
-| `js/rosto.js` | retrato grande do Doidobot em SVG, com todas as expressões |
-| `js/interface.js` | tela, laço do jogo, diálogo, opções, título |
-| `js/roteiro.js` | o roteiro da abertura, cena por cena |
+| `motor.js` | resolução em pixels, cores, esperas e animações do roteiro |
+| `som.js` | efeitos, voz de bipes do Doidobot e trilha que muda com a cena (Web Audio) |
+| `cenario.js` | céu, serras, Guilda, floresta, campina, árvore e moita |
+| `personagens.js` | jogador, sprite do Doidobot (e modo humano), passarinhos, partículas |
+| `rosto.js` | retrato grande do Doidobot em SVG, com todas as expressões |
+| `interface.js` | tela, laço do jogo, diálogo, opções, título |
+| `roteiro.js` | o roteiro da abertura, cena por cena |
