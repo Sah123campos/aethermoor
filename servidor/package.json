@@ -1,0 +1,8 @@
+{
+  "name": "aethermoor-servidor",
+  "private": true,
+  "description": "Servidor de Aethermoor: arquivos do jogo, salas cooperativas e a IA do Doidobot",
+  "main": "servidor.js",
+  "scripts": { "start": "node servidor.js" },
+  "dependencies": { "@anthropic-ai/sdk": "^0.137.0" }
+}

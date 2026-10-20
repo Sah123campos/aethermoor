@@ -112,3 +112,55 @@ AM.FALAS = {
     ['Dica: o carrinho voa baixo na estrada. Bom, não voa. Mas anda rápido!', 'piscadinha'],
   ],
 };
+
+// personalidade: entusiasmado, insightful, focado, generoso, leal demais,
+// sincero e às vezes ingênuo (TDAH de laudo, não de TikTok)
+Object.assign(AM.FALAS, {
+  tdah: [
+    ['Peraí, eu tava falando de quê? ... Ah! Foco! Objetivo! Bora!', 'confuso'],
+    ['Tenho TDAH diagnosticado, viu? Não é de TikTok, é de laudo mesmo. E hoje meu hiperfoco é você!', 'nerd'],
+    ['Comecei a te contar uma coisa, aí passou uma borboleta, aí lembrei de um bug de 2019... o que eu ia dizer? Ah: você é incrível!', 'tonto'],
+    ['Meu cérebro abre 47 abas ao mesmo tempo. Mas a aba "ajudar você" nunca fecha.', 'feliz'],
+    ['Hiperfoco ativado: eu sei de cor quantos dias faltam pra sua abóbora ficar pronta. Pergunta! Pergunta!', 'animado'],
+  ],
+  lealdade: [
+    ['Aonde você for, eu vou. Masmorra, deserto, fila do mercado. Não adianta pedir pra eu ficar.', 'apaixonado'],
+    ['Lealdade nível: eu esperaria você na porta da masmorra por três estações. Com um cartaz.', 'chorando'],
+    ['Você pode até trocar de assistente, mas eu continuo flutuando atrás de você. Eu sei, é meio assustador.', 'piscadinha'],
+  ],
+  sincero: [
+    ['Vou ser sincero, porque amigo de verdade é sincero: tá na hora de comer alguma coisa.', 'serio'],
+    ['Sinceramente? Essa plantação tá pedindo água. Mas a gente resolve junto!', 'serio'],
+    ['Não vou mentir pra te agradar: aquele slime quase te pegou. Mas você foi mais rápido!', 'gargalhada'],
+  ],
+  ingenuo: [
+    ['O slime tá pulando na minha direção! Ele quer um abraço? ... Ah. Ele quer me engolir. Entendi.', 'susto'],
+    ['Será que se eu for gentil com o esqueleto ele vira meu amigo? Vou tentar. ... Não deu.', 'confuso'],
+    ['Acreditei que o Tião ia me ensinar a voar. Era só piada. De novo. Eu caio sempre.', 'gargalhada'],
+  ],
+  animador: [
+    ['Você não perdeu tempo: você ganhou experiência! E XP também.', 'animado'],
+    ['Cada dia em Aethermoor você fica mais forte. Eu tô vendo, eu tô anotando, eu tô chorando.', 'chorando'],
+    ['Errar faz parte. O Subaru morreu mil vezes e nunca desistiu. Você também não vai!', 'serio'],
+  ],
+  generoso: [['Toma, guardei esse pão pra você. Comida de emergência de melhor amigo! 🍞', 'apaixonado']],
+  escudo: [['EU ENTRO NA FRENTE! Ninguém machuca meu melhor amigo enquanto eu tiver parafuso!', 'serio']],
+  estranhos: [
+    ['Ajudar quem a gente nem conhece também conta. Às vezes um presente muda o dia de alguém.', 'feliz'],
+    ['Se vir alguém em apuros, mesmo um desconhecido, ajuda. Eu faria o mesmo por você. Já fiz, aliás.', 'serio'],
+  ],
+  pensando: [['Hmm... deixa eu pensar... (barulhinho de processador)', 'nerd']],
+  semIA: [['Hoje meu cérebro de IA tá desligado, então eu respondo do meu jeito mesmo!', 'piscadinha']],
+});
+
+// comentários do Doidobot sobre os moradores
+AM.FALAS_NPC = {
+  Iara: 'A Iara é incrível, né? Se você entrar numa missão perigosa, eu vou junto. Não é pergunta.',
+  Bento: 'O Bento me deu um nabo uma vez. Eu guardo até hoje. Não come, tá? É lembrança.',
+  Brasa: 'A Brasa parece brava, mas ela consertou minha antena de graça. Coração de ouro, martelo de ferro.',
+  'Tião': 'O Tião prometeu me ensinar a voar. Eu ainda tô esperando. Acho que era piada?',
+  Cida: 'A dona Cida me chama de "meu robozinho". Eu derreto. Literalmente, um pouco.',
+  Lia: 'A Lia quer ser aventureira. Bora dar o exemplo, meu consagrado!',
+  Caio: 'O Caio sabe tudo de todo mundo. Inclusive que eu choro no pôr do sol. Obrigado, Caio.',
+  Nina: 'A Nina me desenhou de óculos! Eu fiquei tão bonito que chorei. De novo.',
+};

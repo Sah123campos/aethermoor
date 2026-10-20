@@ -2,7 +2,7 @@
 // Servidor de Aethermoor: entrega os arquivos do jogo e cuida das salas
 // cooperativas por WebSocket (sem dependências: só o Node).
 //
-//   node servidor.js        (porta 8080; mude com PORT=3000)
+//   node servidor/servidor.js        (porta 8080; mude com PORT=3000)
 //
 // Abra http://localhost:8080 e mande para os amigos o seu endereço na rede
 // (ex.: http://192.168.0.10:8080) junto com o código da sala.
@@ -12,24 +12,49 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const RAIZ = __dirname;
+const RAIZ = path.resolve(__dirname, '..');
 const PASTA_SALAS = path.join(__dirname, 'salas');
 const PORTA = Number(process.env.PORT) || 8080;
 const MAX_JOGADORES = 8;
 const MAX_MSG = 16 * 1024 * 1024;
+const ia = require('./ia');
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2',
   '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.json': 'application/json', '.md': 'text/markdown; charset=utf-8' };
 
 fs.mkdirSync(PASTA_SALAS, { recursive: true });
 
+// ---------- IA do Doidobot ----------
+// Jogo aberto direto do arquivo manda Origin "null"; do próprio servidor, o mesmo endereço.
+function origemOk(req) {
+  const o = req.headers.origin;
+  return !o || o === 'null' || o === `http://${req.headers.host}` || o === `https://${req.headers.host}`;
+}
+function apiDoidobot(req, res) {
+  const cab = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+  if (req.headers.origin) Object.assign(cab, { 'Access-Control-Allow-Origin': req.headers.origin, 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'Content-Type', Vary: 'Origin' });
+  if (!origemOk(req)) { res.writeHead(403, cab); return res.end('{"erro":"origem"}'); }
+  if (req.method === 'OPTIONS') { res.writeHead(204, cab); return res.end(); }
+  if (req.method === 'GET') return ia.status().then(s => { res.writeHead(200, cab); res.end(JSON.stringify(s)); });
+  if (req.method !== 'POST') { res.writeHead(405, cab); return res.end(); }
+  let corpo = '';
+  req.on('data', d => { corpo += d; if (corpo.length > 64 * 1024) req.destroy(); });
+  req.on('end', async () => {
+    let entrada;
+    try { entrada = JSON.parse(corpo); } catch { res.writeHead(400, cab); return res.end('{"erro":"json"}'); }
+    const r = await ia.responder(entrada, req.socket.remoteAddress);
+    res.writeHead(200, cab); res.end(JSON.stringify(r));
+  });
+}
+
 // ---------- arquivos do jogo ----------
 const servidor = http.createServer((req, res) => {
+  if (req.url.split('?')[0] === '/api/doidobot') return apiDoidobot(req, res);
   let url;
   try { url = decodeURIComponent(req.url.split('?')[0]); } catch { res.writeHead(400); return res.end(); }
   if (url === '/') url = '/index.html';
   const arq = path.normalize(path.join(RAIZ, url));
   // nada fora do jogo nem dentro da pasta do servidor (onde ficam as salas salvas)
-  if (!arq.startsWith(RAIZ + path.sep) || arq.startsWith(path.join(RAIZ, 'salas') + path.sep) || path.basename(arq).startsWith('.')) { res.writeHead(403); return res.end(); }
+  if (!arq.startsWith(RAIZ + path.sep) || arq.startsWith(path.join(RAIZ, 'servidor') + path.sep) || path.basename(arq).startsWith('.')) { res.writeHead(403); return res.end(); }
   fs.readFile(arq, (erro, dados) => {
     if (erro) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Não encontrado'); }
     res.writeHead(200, { 'Content-Type': TIPOS[path.extname(arq)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
@@ -189,5 +214,6 @@ function sair(c) {
 servidor.listen(PORTA, () => {
   const ips = Object.values(require('os').networkInterfaces()).flat().filter(i => i && i.family === 'IPv4' && !i.internal).map(i => i.address);
   console.log(`Aethermoor rodando em http://localhost:${PORTA}`);
+  ia.status().then(st => console.log(st.ativo ? `IA do Doidobot: ${st.provedor} (${st.modelo})` : `IA do Doidobot desligada: ${st.motivo}`));
   ips.forEach(ip => console.log(`Na sua rede: http://${ip}:${PORTA}`));
 });

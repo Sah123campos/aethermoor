@@ -58,10 +58,7 @@ AM.criaturas = (() => {
     const j = AM.jog, s = AM.inv.selecionado();
     if (e.classe === 'npc') {
       e.dir = Math.abs(j.x - e.x) > Math.abs(j.y - e.y) ? (j.x < e.x ? 'esq' : 'dir') : (j.y < e.y ? 'cima' : 'baixo');
-      if (e.loja === 'guilda') return AM.ui.abrir('guilda');
-      if (e.loja) return AM.ui.abrir('loja', { loja: e.loja });
-      AM.ui.aviso(`${e.nome}: ${e.fala}`);
-      return;
+      return AM.ui.abrir('npc', { e });
     }
     if (e.classe === 'veiculo') return AM.ui.abrir('veiculo', { v: e });
     if (e.classe === 'mob') return domarLobo(e);

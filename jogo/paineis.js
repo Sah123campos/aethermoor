@@ -59,7 +59,7 @@ AM.paineis = (() => {
         const it = AM.jog.inv[selInv]; if (!it) return;
         if (b.dataset.ac === 'comer') AM.comer(it.id);
         if (b.dataset.ac === 'equipar') { AM.jog.faixa = !AM.jog.faixa; AM.ui.aviso(AM.jog.faixa ? 'Faixa ninja equipada! Aperte J.' : 'Faixa guardada.'); }
-        if (b.dataset.ac === 'hotbar') { const vazio = AM.jog.inv.findIndex((s, k) => k < 8 && !s); const k = vazio >= 0 ? vazio : AM.jog.sel; const inv = AM.jog.inv; [inv[k], inv[selInv]] = [inv[selInv], inv[k]]; selInv = k; }
+        if (b.dataset.ac === 'hotbar') { const vazio = AM.jog.inv.findIndex((s, k) => k < 8 && !s); const k = vazio >= 0 ? vazio : Math.max(0, AM.jog.sel); const inv = AM.jog.inv; [inv[k], inv[selInv]] = [inv[selInv], inv[k]]; selInv = k; }
         if (b.dataset.ac === 'largar') { AM.criaturas.soltarItem(it.id, it.qtd, AM.jog.x, AM.jog.y + 14); AM.jog.inv[selInv] = null; selInv = null; }
         AM.ui.atualizarHotbar(); redesenhar();
       }; });
@@ -139,8 +139,9 @@ AM.paineis = (() => {
 
   // ---------- lojas ----------
   P.loja = d => {
-    const loja = AM.LOJAS[d.loja], car = AM.jog.atrib.carisma, t = aba.loja || 'comprar';
-    let corpo = abas([['comprar', 'Comprar'], ['vender', 'Vender']], 'loja', 'comprar') + `<p>Seu ouro: <b>${AM.sis.ouro()}</b>${car ? ` · Carisma ${car}: preços melhores` : ''}</p>`;
+    const loja = AM.LOJAS[d.loja], t = aba.loja || 'comprar';
+    const amigo = loja.npc ? AM.npc.descontoAmizade(loja.npc) : 0, car = AM.jog.atrib.carisma + amigo;
+    let corpo = abas([['comprar', 'Comprar'], ['vender', 'Vender']], 'loja', 'comprar') + `<p>Seu ouro: <b>${AM.sis.ouro()}</b>${car ? ` · ${amigo ? `amizade com ${loja.npc} e ` : ''}carisma deixam os preços melhores` : ''}</p>`;
     if (t === 'comprar') {
       corpo += `<div class="lista">${loja.vende(AM.tempo.estacao).map(id => {
         const preco = AM.precoCompra(id, car), animal = id.startsWith('animal:');
@@ -163,6 +164,42 @@ AM.paineis = (() => {
     const vender = (id, n) => { if (!AM.inv.remover(id, n)) return; const v = AM.precoVenda(id, car) * n; AM.sis.ganharOuro(v); AM.som('moeda'); AM.fx.texto(AM.jog.x, AM.jog.y - 28, `+${v} ouro`, '#ffd23f'); redesenhar(); };
     el.querySelectorAll('[data-v]').forEach(b => { b.onclick = () => vender(b.dataset.v, 1); });
     el.querySelectorAll('[data-vt]').forEach(b => { b.onclick = () => vender(b.dataset.vt, AM.inv.contar(b.dataset.vt)); });
+  };
+
+  // ---------- conversa com moradores ----------
+  P.npc = (d, re) => {
+    const e = d.e, nome = e.nome, info = AM.NPCS[nome] || { titulo: '' };
+    if (!re) d.fala = AM.npc.conversar(nome);
+    const cor = AM.npc.coracoes(nome);
+    const botoes = [];
+    if (!d.presente) {
+      botoes.push('<button class="btn" data-n="conversar">Conversar</button>');
+      if (e.loja === 'guilda') botoes.push('<button class="btn ouro" data-n="guilda">Guilda</button><button class="btn" data-n="quadro">Missões</button><button class="btn claro" data-n="loja">Poções e flechas</button>');
+      else if (e.loja) botoes.push('<button class="btn ouro" data-n="loja">Comprar e vender</button>');
+      botoes.push('<button class="btn claro" data-n="presente">Dar presente</button><button class="btn claro" data-fechar2>Tchau</button>');
+    }
+    const presentes = d.presente ? AM.jog.inv.map((it, i) => ({ it, i })).filter(({ it }) => it && !['ferramenta', 'veiculo'].includes(AM.ITENS[it.id].cat) && it.id !== 'retorno_morte') : [];
+    const el = caixa(nome, `<div class="npcCaixa"><div class="npcRetrato"><canvas width="64" height="96"></canvas><b>${nome}</b><small>${info.titulo}</small><span class="coracoes" title="Amizade">${'❤'.repeat(cor)}${'♡'.repeat(10 - cor)}</span></div>
+      <div class="npcFala"><p class="balaoNpc">${d.fala}</p>
+      ${d.presente ? `<h3>Escolha um presente (um por dia)</h3>${presentes.length ? `<div class="grade">${presentes.map(({ it, i }) => `<button class="slot" data-pr="${i}" title="${AM.ITENS[it.id].nome}">${AM.ui.htmlSlot(it)}</button>`).join('')}</div>` : '<p>Você não tem nada para dar agora.</p>'}<button class="btn claro" data-n="voltar">Voltar</button>` : `<div class="npcBotoes">${botoes.join('')}</div>`}</div></div>`, '40em');
+    const cv = el.querySelector('canvas'), x = cv.getContext('2d');
+    x.imageSmoothingEnabled = false;
+    x.drawImage(AM.spr.pessoa(e.paleta, 'baixo', 0), 0, 0, 16, 24, 0, 0, 64, 96);
+    el.querySelectorAll('[data-n]').forEach(b => { b.onclick = () => {
+      const a = b.dataset.n;
+      if (a === 'conversar') { d.fala = AM.npc.fala(nome); AM.som('pop'); redesenhar(); if (Math.random() < .2) AM.bot.comentarNpc(nome); }
+      else if (a === 'loja') AM.ui.abrir('loja', { loja: e.loja });
+      else if (a === 'guilda') AM.ui.abrir('guilda');
+      else if (a === 'quadro') AM.ui.abrir('quadro');
+      else if (a === 'presente') { d.presente = true; redesenhar(); }
+      else if (a === 'voltar') { d.presente = false; redesenhar(); }
+    }; });
+    el.querySelectorAll('[data-pr]').forEach(b => { b.onclick = () => {
+      const it = AM.jog.inv[+b.dataset.pr]; if (!it) return;
+      d.fala = AM.npc.presentear(nome, it.id) || d.fala; d.presente = false;
+      AM.ui.atualizarHotbar(); redesenhar();
+    }; });
+    const f = el.querySelector('[data-fechar2]'); if (f) f.onclick = () => AM.ui.fechar();
   };
 
   // ---------- Guilda e quadro de missões ----------
@@ -212,7 +249,8 @@ AM.paineis = (() => {
     el.querySelectorAll('[data-pl]').forEach(b => { b.onclick = () => { AM.ui.fechar(); AM.construcao.iniciar(b.dataset.pl); }; });
     el.querySelectorAll('[data-bl]').forEach(b => { b.onclick = () => {
       const i = +b.dataset.bl, inv = AM.jog.inv;
-      if (i >= 8) { [inv[AM.jog.sel], inv[i]] = [inv[i], inv[AM.jog.sel]]; } else AM.jog.sel = i;
+      const k = AM.jog.sel < 0 ? 0 : AM.jog.sel;
+      if (i >= 8) { [inv[k], inv[i]] = [inv[i], inv[k]]; AM.jog.sel = k; } else AM.jog.sel = i;
       AM.ui.atualizarHotbar(); AM.ui.fechar(); AM.ui.aviso('Bloco na mão! Use num tile vazio para colocar.');
     }; });
     ligarReceitas(el, 'mao');
@@ -271,15 +309,23 @@ AM.paineis = (() => {
     el.querySelector('[data-fechar2]').onclick = () => AM.ui.fechar();
   };
 
-  // ---------- conversa com o Doidobot ----------
-  P.conversa = () => {
-    const el = caixa('Conversar com o Doidobot', `<p>Escreva qualquer coisa. Ele escuta só de um lado, mas se esforça!</p>
-      <form id="formBot" style="display:flex;gap:6px"><input id="campoBot" type="text" maxlength="120" placeholder="Ex.: me dá uma dica" style="flex:1;min-width:0;font:inherit;border:2px solid var(--madeira);border-radius:6px;padding:4px 8px;background:#fffaf0"><button class="btn">Falar</button></form>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${['Me dá uma dica', 'Conta uma curiosidade', 'Vira humano!', 'Foi mais fácil fazer o jogo do que fazer você entender', 'Oi!'].map(t => `<button class="btn claro" data-t="${t}">${t}</button>`).join('')}</div>`, '34em');
-    const enviar = t => { if (!t.trim()) return; AM.ui.fechar(); AM.bot.conversar(t); };
-    el.querySelector('#formBot').onsubmit = e => { e.preventDefault(); enviar(el.querySelector('#campoBot').value); };
+  // ---------- conversa com o Doidobot (chat) ----------
+  P.conversa = (d, re) => {
+    const h = AM.bot.historico().slice(-14);
+    const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const status = AM.ia.ativo ? `<small class="iaOn">● IA ligada (${{ ollama: 'DeepSeek no seu PC', deepseek: 'DeepSeek', claude: 'Claude', gemini: 'Gemini' }[AM.ia.provedor] || AM.ia.provedor}): ele entende e responde de verdade</small>` : '<small>Modo clássico: ele responde por palavras-chave. Para ele entender de verdade, rode o servidor do jogo com o DeepSeek (veja o README).</small>';
+    const valor = re ? (document.querySelector('#campoBot') || {}).value || '' : '';
+    const el = caixa('Conversar com o Doidobot', `${status}
+      <div class="chatBot" id="chatBot">${h.length ? h.map(m => `<p class="msg ${m.papel}">${esc(m.texto)}</p>`).join('') : '<p class="msg doidobot">Oi! Pode falar qualquer coisa. Eu escuto só de um lado, mas presto atenção em dobro!</p>'}${AM.bot.esperando ? '<p class="msg doidobot pensando">digitando…</p>' : ''}</div>
+      <form id="formBot" class="formBot"><label for="campoBot" class="so-leitor">Mensagem</label><input id="campoBot" type="text" maxlength="300" autocomplete="off" placeholder="Escreva para o Doidobot" enterkeyhint="send"><button class="btn">Enviar</button></form>
+      <div class="sugestoes">${['Me dá uma dica', 'Qual o foco de hoje?', 'Conta uma curiosidade', 'Vira humano!', 'Foi mais fácil fazer o jogo do que fazer você entender'].map(t => `<button class="btn claro" data-t="${t}">${t}</button>`).join('')}</div>`, '36em');
+    const campo = el.querySelector('#campoBot');
+    campo.value = valor;
+    const log = el.querySelector('#chatBot'); log.scrollTop = log.scrollHeight;
+    const enviar = t => { if (!t.trim()) return; campo.value = ''; AM.bot.conversar(t); redesenhar(); };
+    el.querySelector('#formBot').onsubmit = e => { e.preventDefault(); enviar(campo.value); };
     el.querySelectorAll('[data-t]').forEach(b => { b.onclick = () => enviar(b.dataset.t); });
-    setTimeout(() => el.querySelector('#campoBot').focus(), 50);
+    if (!AM.toqueAtivo || !re) setTimeout(() => campo.focus({ preventScroll: true }), 50);
   };
 
   // ---------- opções ----------
@@ -301,7 +347,8 @@ AM.paineis = (() => {
       <div class="op"><span>Modo Sem Pressa<small>O jogo pausa enquanto um menu está aberto</small></span>${chk('oPressa', o.semPressa)}</div>
       <div class="op"><span>Destaque no tile alvo<small>Mostra onde a ferramenta vai agir</small></span>${chk('oDest', o.destaques !== false)}</div>
       <div class="op"><span>Modo daltônico<small>Troca as cores das barras por cores mais distintas</small></span>${chk('oDalt', o.daltonico)}</div>
-      <div class="op"><span>Tamanho do texto</span>${sel('oEsc', o.escalaTexto, [[.85, 'Pequeno'], [1, 'Normal'], [1.2, 'Grande'], [1.4, 'Bem grande']])}</div></div>`;
+      <div class="op"><span>Tamanho do texto</span>${sel('oEsc', o.escalaTexto, [[.85, 'Pequeno'], [1, 'Normal'], [1.2, 'Grande'], [1.4, 'Bem grande']])}</div>
+      <div class="op"><span>Zoom do mundo<small>Perto deixa tudo maior (bom no celular)</small></span>${sel('oZoom', o.zoom || 'normal', [['perto', 'Perto'], ['normal', 'Normal'], ['longe', 'Longe']])}</div></div>`;
     if (t === 'teclas') corpo += `<p>Clique numa ação e aperte a nova tecla.</p><div class="teclas">${Object.keys(AM.NOMES_ACOES).map(a => `<span>${AM.NOMES_ACOES[a]}</span><button data-tecla="${a}">${AM.input.nomeTecla(AM.input.tecla(a))}</button>`).join('')}</div><button class="btn claro" id="oTeclasPadrao">Voltar ao padrão</button>`;
     if (t === 'multi') corpo += AM.rede ? AM.rede.painelHtml() : '<p>Multijogador indisponível.</p>';
     const el = caixa('Opções', corpo);
@@ -313,6 +360,7 @@ AM.paineis = (() => {
     on('oLerdo', e => { o.lerdo = e.checked; if (o.lerdo) AM.bot.falarDe('lerdo', true); });
     on('oPressa', e => { o.semPressa = e.checked; }); on('oDest', e => { o.destaques = e.checked; });
     on('oDalt', e => { o.daltonico = e.checked; }); on('oEsc', e => { o.escalaTexto = +e.value; });
+    on('oZoom', e => { o.zoom = e.value; AM.render.ajustar(); });
     const b = id => el.querySelector('#' + id);
     if (b('oTut')) b('oTut').onclick = () => { AM.ui.fechar(); AM.tutorial.refazer(); };
     if (b('oSalvar')) b('oSalvar').onclick = () => { AM.jogo.salvar(); AM.ui.aviso('Jogo salvo!'); };

@@ -19,7 +19,7 @@ AM.rede = (() => {
     ws.onopen = aoAbrir;
     ws.onmessage = e => { try { receber(JSON.parse(e.data)); } catch (erro) { console.error(erro); } };
     ws.onclose = () => { if (est.conectado) avisar('Você saiu da sala (conexão encerrada).'); est.conectado = false; est.anfitriao = true; outros.clear(); };
-    ws.onerror = () => avisar('Não consegui falar com o servidor. Ele precisa estar rodando: node servidor.js');
+    ws.onerror = () => avisar('Não consegui falar com o servidor. Ele precisa estar rodando: node servidor/servidor.js');
   }
   const enviar = o => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   const avisar = (t, tipo) => { if (AM.ui && document.querySelector('#avisos')) AM.ui.aviso(t, tipo); else { const p = document.querySelector('#inicio p'); if (p) p.textContent = t; } };
@@ -155,7 +155,7 @@ AM.rede = (() => {
         <form id="mChat" style="display:flex;gap:6px"><input type="text" id="mMsg" maxlength="200" placeholder="Mensagem para a sala" style="flex:1;min-width:0"><button class="btn">Enviar</button></form>
         <button class="btn claro" id="mSair">Sair da sala</button>`;
     } else {
-      h += `<p>Jogue junto com até 8 pessoas no mesmo mundo. Uma pessoa roda o servidor (<code>node servidor.js</code>) e todos abrem o endereço dele no navegador.</p>
+      h += `<p>Jogue junto com até 8 pessoas no mesmo mundo. Uma pessoa roda o servidor (<code>node servidor/servidor.js</code>) e todos abrem o endereço dele no navegador.</p>
         ${local ? `<div class="op"><span>Servidor<small>Você abriu o jogo direto do arquivo, então diga onde está o servidor</small></span><input type="text" id="mServ" value="${enderecoServidor()}"></div>` : ''}
         <div class="op"><span>Criar sala<small>Seu mundo atual vira o mundo da sala</small></span><button class="btn ouro" id="mCriar">Criar sala</button></div>
         <form class="op" id="mEntrar"><span>Entrar numa sala<small>Use o código que o amigo passou. Seu mundo atual continua salvo neste navegador.</small></span><span style="display:flex;gap:6px"><input type="text" id="mCodigo" maxlength="5" placeholder="CÓDIGO" style="width:6em;text-transform:uppercase"><button class="btn">Entrar</button></span></form>

@@ -90,6 +90,7 @@ AM.mover = function (e, dx, dy, r = 4, voando = false) {
 // ---------- alvo (tile que o jogador vai afetar) ----------
 const DIRS = { baixo: [0, 1], cima: [0, -1], esq: [-1, 0], dir: [1, 0] };
 AM.alvo = function () {
+  if (AM.alvoForcado) return AM.alvoForcado;   // tile tocado na tela (celular)
   const j = AM.jog, tx = Math.floor(j.x / 16), ty = Math.floor((j.y - 4) / 16);
   const ms = AM.input.mouse;
   if (ms.dentro && performance.now() - ms.mexeu < 4000 && !AM.toqueAtivo) {
@@ -288,52 +289,73 @@ AM.atualizarPesca = function (dt) {
   if (AM.jog.andando) AM.jog.pesca = null;
 };
 
-// ---------- interação (F / clique direito) ----------
-AM.interagir = function () {
+// ---------- interação (F / clique direito / botão de ação) ----------
+// Descobre o que a interação faria agora, sem fazer: { rotulo, curto, fazer, alvo|tile } ou null.
+// Serve para o botão de ação do celular e a dica "F · Falar com Iara" do computador.
+function porFeno(a, info) {
+  const feno = (info && info.feno) || 0;
+  if (feno >= 10) { AM.ui.aviso('O cocho está cheio (10 porções).'); return; }
+  const poe = Math.min(10 - feno, AM.inv.contar('feno'));
+  if (poe > 0) { AM.inv.remover('feno', poe); AM.m.setInfo(a.x, a.y, { feno: feno + poe }); AM.som('colocar'); AM.ui.aviso(`Cocho com ${feno + poe} porções de feno. Cada animal come uma por dia.`); }
+  else AM.ui.aviso(`O cocho tem ${feno} porções. Precisa de feno: corte capim ou compre no mercado ou no estábulo.`);
+}
+AM.acaoContexto = function () {
   const j = AM.jog;
-  if (j.pesca) { AM.puxarPeixe(); return; }
-  if (j.montaria) { AM.criaturas.desmontar(); return; }
+  if (j.pesca) return { rotulo: 'Puxar a linha', curto: 'Puxar', fazer: AM.puxarPeixe };
+  if (j.montaria) return { rotulo: 'Descer', curto: 'Descer', fazer: () => AM.criaturas.desmontar() };
+  const s = AM.inv.selecionado();
   // pessoas, animais e veículos por perto têm prioridade
-  const e = AM.criaturas.maisPerto(j.x, j.y, 22);
-  if (e) { AM.criaturas.interagirCom(e); return; }
-  const a = AM.alvo(), id = AM.m.ob(a.x, a.y), ob = AM.OBJ[id], info = AM.m.info(a.x, a.y);
-  const p = AM.m.planta(a.x, a.y);
-  if (p) { AM.sis.colher(a.x, a.y); return; }
-  if (ob && id) {
-    if (ob.bau) return AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Baú' });
-    if (ob.venda) return AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Caixa de vendas', venda: true });
-    if (ob.balcao) return AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Balcão da sua loja', balcao: true });
-    if (ob.cama) return AM.ui.abrir('dormir', { x: a.x, y: a.y });
-    if (ob.estacao) return AM.ui.abrir('criar', { estacao: ob.estacao });
-    if (ob.quadro) return AM.ui.abrir('quadro');
-    if (ob.cocho) {
-      const feno = (info && info.feno) || 0;
-      if (feno >= 10) { AM.ui.aviso('O cocho está cheio (10 porções).'); return; }
-      const poe = Math.min(10 - feno, AM.inv.contar('feno'));
-      if (poe > 0) { AM.inv.remover('feno', poe); AM.m.setInfo(a.x, a.y, { feno: feno + poe }); AM.som('colocar'); AM.ui.aviso(`Cocho com ${feno + poe} porções de feno. Cada animal come uma por dia.`); }
-      else AM.ui.aviso(`O cocho tem ${feno} porções. Precisa de feno: corte capim ou compre no mercado ou no estábulo.`);
-      return;
+  const e = AM.criaturas.maisPerto(j.x, j.y, 24);
+  if (e) {
+    const fazer = () => AM.criaturas.interagirCom(e);
+    if (e.classe === 'npc') return { rotulo: `Falar com ${e.nome}`, curto: 'Falar', alvo: e, fazer };
+    if (e.classe === 'veiculo') return { rotulo: e.tipo === 'balao' ? 'Usar o balão' : 'Usar o carrinho', curto: 'Subir', alvo: e, fazer };
+    if (e.classe === 'mob') return { rotulo: 'Dar carne ao lobo', curto: 'Domar', alvo: e, fazer };
+    if (e.classe === 'animal') {
+      const def = AM.ANIMAIS[e.tipo];
+      if (e.selvagem) return s && s.id === def.domar ? { rotulo: `Dar ${AM.ITENS[def.domar].nome.toLowerCase()} ao ${def.nome.toLowerCase()}`, curto: 'Domar', alvo: e, fazer } : { rotulo: `Ver o ${def.nome.toLowerCase()}`, curto: 'Ver', alvo: e, fazer };
+      if (e.daVila) return { rotulo: 'Ver a vaca', curto: 'Ver', alvo: e, fazer };
+      if (e.pronto && def.produto) return { rotulo: `Pegar ${AM.ITENS[def.produto].nome.toLowerCase()}`, curto: 'Pegar', alvo: e, fazer };
+      if (def.pet) return { rotulo: e.seguir ? `${e.nome}: ficar aqui` : `${e.nome}: me seguir`, curto: e.seguir ? 'Ficar' : 'Seguir', alvo: e, fazer };
+      return { rotulo: `Carinho em ${e.nome || def.nome}`, curto: 'Carinho', alvo: e, fazer };
     }
-    if (ob.colmeia) {
+  }
+  const a = AM.alvo(), id = AM.m.ob(a.x, a.y), ob = AM.OBJ[id], info = AM.m.info(a.x, a.y), p = AM.m.planta(a.x, a.y);
+  const T = (rotulo, curto, fazer) => ({ rotulo, curto, fazer, tile: a });
+  if (p) {
+    const cu = AM.CULTURAS[p.tipo], pronta = AM.sis.faseDe(p) >= 4;
+    return T(p.morta ? 'Arrancar a planta morta' : pronta ? `Colher ${cu.nome.toLowerCase()}` : `Ver ${cu.nome.toLowerCase()}`, p.morta ? 'Arrancar' : pronta ? 'Colher' : 'Ver', () => AM.sis.colher(a.x, a.y));
+  }
+  if (ob && id) {
+    if (ob.bau) return T('Abrir o baú', 'Abrir', () => AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Baú' }));
+    if (ob.venda) return T('Abrir a caixa de vendas', 'Abrir', () => AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Caixa de vendas', venda: true }));
+    if (ob.balcao) return T('Abrir o balcão da loja', 'Balcão', () => AM.ui.abrir('bau', { x: a.x, y: a.y, titulo: 'Balcão da sua loja', balcao: true }));
+    if (ob.cama) return T('Dormir', 'Dormir', () => AM.ui.abrir('dormir', { x: a.x, y: a.y }));
+    if (ob.estacao) {
+      const nome = { bancada: ['Usar a bancada', 'Criar'], fogo: ['Cozinhar na fogueira', 'Cozinhar'], fogao: ['Cozinhar no fogão', 'Cozinhar'], forno: ['Usar o forno', 'Forno'] }[ob.estacao];
+      return T(nome[0], nome[1], () => AM.ui.abrir('criar', { estacao: ob.estacao }));
+    }
+    if (ob.quadro) return T('Ver o quadro de missões', 'Missões', () => AM.ui.abrir('quadro'));
+    if (ob.cocho) return T(`Pôr feno no cocho (${(info && info.feno) || 0}/10)`, 'Feno', () => porFeno(a, info));
+    if (ob.colmeia) return T(info && info.dias >= 3 ? 'Pegar mel' : 'Ver a colmeia', 'Colmeia', () => {
       if (info && info.dias >= 3) { AM.m.setInfo(a.x, a.y, { dias: 0 }); AM.inv.dar('mel'); AM.som('colher'); AM.sis.ganharXP(4, 'coleta'); }
       else AM.ui.aviso(AM.tempo.estacao === 3 ? 'As abelhas estão hibernando no inverno.' : 'As abelhas ainda estão fazendo mel.');
-      return;
-    }
-    if (ob.chave === 'arbusto') {
+    });
+    if (ob.chave === 'arbusto') return T(info && info.fruta && AM.tempo.estacao !== 3 ? 'Colher frutinhas' : 'Ver o arbusto', 'Frutinhas', () => {
       if (info && info.fruta && AM.tempo.estacao !== 3) { AM.m.setInfo(a.x, a.y, { fruta: false, dias: 0 }); AM.inv.dar('frutinha', AM.u.inteiro(2, 3)); AM.som('colher'); }
       else AM.ui.aviso('Ainda não tem frutinhas.');
-      return;
-    }
-    if (ob.entrada) return AM.masmorra.entrar(info.masmorra);
-    if (ob.saida) return AM.masmorra.sair();
-    if (ob.tesouro) return AM.masmorra.abrirTesouro(a.x, a.y);
-    if (ob.agua) { AM.comer('agua', false); return; }
-    if (id === AM.OB.PLACA) { AM.ui.aviso((info && info.texto) || 'Uma placa.'); return; }
-    if (id === AM.OB.BARRACA) { AM.ui.abrir('loja', { loja: 'mercado' }); return; }
-    if (ob.ferr === 'mao') { AM.bater(a.x, a.y, 9); return; }
+    });
+    if (ob.entrada) { const m = AM.MASMORRAS.find(d => d.id === info.masmorra); return T(`Entrar: ${m.nome}`, 'Entrar', () => AM.masmorra.entrar(info.masmorra)); }
+    if (ob.saida) return T('Subir para a superfície', 'Sair', () => AM.masmorra.sair());
+    if (ob.tesouro) return T('Abrir o tesouro', 'Abrir', () => AM.masmorra.abrirTesouro(a.x, a.y));
+    if (ob.agua) return T('Beber água do poço', 'Beber', () => AM.comer('agua', false));
+    if (id === AM.OB.PLACA) return T('Ler a placa', 'Ler', () => AM.ui.aviso((info && info.texto) || 'Uma placa.'));
+    if (id === AM.OB.BARRACA) return T('Comprar no mercado', 'Mercado', () => AM.ui.abrir('loja', { loja: 'mercado' }));
+    if (ob.ferr === 'mao') return T(`Pegar ${ob.nome.toLowerCase()}`, 'Pegar', () => AM.bater(a.x, a.y, 9));
   }
-  if (AM.ehAgua(AM.m.ch(a.x, a.y))) { AM.comer('agua', false); return; }
-  // comer o que estiver na mão
-  const s = AM.inv.selecionado();
-  if (s && AM.ITENS[s.id].comida) AM.comer(s.id);
+  if (AM.ehAgua(AM.m.ch(a.x, a.y)) && !AM.m.congelado(a.x, a.y)) return T('Beber água', 'Beber', () => AM.comer('agua', false));
+  if (s && AM.ITENS[s.id].comida) return T(`${AM.ITENS[s.id].cat === 'bebida' ? 'Beber' : 'Comer'} ${AM.ITENS[s.id].nome.toLowerCase()}`, AM.ITENS[s.id].cat === 'bebida' ? 'Beber' : 'Comer', () => AM.comer(s.id));
+  return null;
 };
+
+AM.interagir = function () { const a = AM.acaoContexto(); if (a) a.fazer(); };

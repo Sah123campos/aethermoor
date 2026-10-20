@@ -19,9 +19,11 @@ AM.construcao = (() => {
   // ---------- escolher o lugar ----------
   function iniciar(plantaId) {
     if (AM.mapa.id !== 'mundo') { AM.ui.aviso('Só dá para construir na superfície.'); return; }
-    modo = { planta: plantaId, x: 0, y: 0, ok: false };
-    AM.ui.aviso('Escolha o lugar. Usar/clique confirma, Esc cancela.');
+    modo = { planta: plantaId, x: 0, y: 0, ok: false, fixo: null };
+    AM.ui.aviso(AM.toqueAtivo ? 'Toque onde quer construir e depois em "Construir aqui".' : 'Escolha o lugar. Usar/clique confirma, Esc cancela.');
   }
+  // no celular o lugar fica onde você tocou
+  function fixar(tx, ty) { if (modo) modo.fixo = { x: tx, y: ty }; }
   const cancelar = () => { modo = null; };
   const ativo = () => modo;
 
@@ -47,7 +49,8 @@ AM.construcao = (() => {
     const pl = AM.PLANTAS[modo.planta], w = pl.planta[0].length, h = pl.planta.length;
     const ms = AM.input.mouse;
     let cx, cy;
-    if (ms.dentro && !AM.toqueAtivo) { cx = Math.floor(ms.mundoX / 16); cy = Math.floor(ms.mundoY / 16); }
+    if (modo.fixo) { cx = modo.fixo.x; cy = modo.fixo.y; }
+    else if (ms.dentro && !AM.toqueAtivo) { cx = Math.floor(ms.mundoX / 16); cy = Math.floor(ms.mundoY / 16); }
     else { const a = AM.alvo(); cx = a.x; cy = a.y + (AM.jog.dir === 'cima' ? -Math.floor(h / 2) : AM.jog.dir === 'baixo' ? Math.floor(h / 2) : 0); }
     modo.x = cx - Math.floor(w / 2); modo.y = cy - Math.floor(h / 2);
     modo.motivo = validar(modo.planta, modo.x, modo.y);
@@ -140,5 +143,5 @@ AM.construcao = (() => {
   const temCavalo = () => AM.E.animais.some(a => a.tipo === 'cavalo');
   function verificarRuina() { /* as construções continuam registradas mesmo com paredes quebradas */ }
 
-  return { iniciar, cancelar, ativo, confirmar, atualizar, validar, porId, area, alimentar, aquecida, vagas, comprarAnimal, temCavalo, verificarRuina, obras };
+  return { iniciar, fixar, cancelar, ativo, confirmar, atualizar, validar, porId, area, alimentar, aquecida, vagas, comprarAnimal, temCavalo, verificarRuina, obras };
 })();

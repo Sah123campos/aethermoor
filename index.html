@@ -6,13 +6,13 @@
 <title>Despertar em Aethermoor</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0b0d1c">
-<link rel="stylesheet" href="jogo.css">
+<link rel="stylesheet" href="jogo/jogo.css">
 <style>
 /* Palco 16:9 de pixel art no centro; o diálogo de pergaminho fica sobre a base
    do palco (no celular em pé, logo abaixo dele). Visual único, noturno. */
 @font-face {
   font-family: "Pixelify Sans";
-  src: url("PixelifySans.woff2") format("woff2");
+  src: url("assets/fontes/PixelifySans.woff2") format("woff2");
   font-weight: 400 700;
   font-display: swap;
 }
@@ -41,6 +41,9 @@ body {
 }
 [hidden] { display: none !important; }
 button { font: inherit; }
+/* campos de texto sempre com letra escura no fundo claro (o tema escuro deixava a letra branca) */
+input, select, textarea { font: inherit; color: var(--tinta); background-color: #fffaf0; caret-color: var(--tinta); }
+input::placeholder, textarea::placeholder { color: #9a7a58; opacity: 1; }
 :focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }
 
 #jogo { position: relative; width: min(100%, calc((100dvh - 32px) * 16 / 9)); }
@@ -346,32 +349,33 @@ button { font: inherit; }
   <div id="recado" hidden><div class="mini"></div><span></span></div>
 </div>
 
-<script src="motor.js"></script>
-<script src="som.js"></script>
-<script src="cenario.js"></script>
-<script src="personagens.js"></script>
-<script src="rosto.js"></script>
-<script src="interface.js"></script>
-<script src="roteiro.js"></script>
-<script src="base.js"></script>
-<script src="dados.js"></script>
-<script src="dados2.js"></script>
-<script src="falas.js"></script>
-<script src="sprites_mundo.js"></script>
-<script src="sprites_seres.js"></script>
-<script src="sprites_icones.js"></script>
-<script src="mundo.js"></script>
-<script src="jogador.js"></script>
-<script src="criaturas.js"></script>
-<script src="sistemas.js"></script>
-<script src="missoes.js"></script>
-<script src="construcao.js"></script>
-<script src="masmorra.js"></script>
-<script src="render.js"></script>
-<script src="doidobot.js"></script>
-<script src="ui.js"></script>
-<script src="paineis.js"></script>
-<script src="rede.js"></script>
-<script src="principal.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/som.js"></script>
+<script src="js/cenario.js"></script>
+<script src="js/personagens.js"></script>
+<script src="js/rosto.js"></script>
+<script src="js/interface.js"></script>
+<script src="js/roteiro.js"></script>
+<script src="jogo/base.js"></script>
+<script src="jogo/dados.js"></script>
+<script src="jogo/dados2.js"></script>
+<script src="jogo/falas.js"></script>
+<script src="jogo/sprites_mundo.js"></script>
+<script src="jogo/sprites_seres.js"></script>
+<script src="jogo/sprites_icones.js"></script>
+<script src="jogo/mundo.js"></script>
+<script src="jogo/jogador.js"></script>
+<script src="jogo/criaturas.js"></script>
+<script src="jogo/sistemas.js"></script>
+<script src="jogo/missoes.js"></script>
+<script src="jogo/construcao.js"></script>
+<script src="jogo/masmorra.js"></script>
+<script src="jogo/render.js"></script>
+<script src="jogo/npcs.js"></script>
+<script src="jogo/doidobot.js"></script>
+<script src="jogo/ui.js"></script>
+<script src="jogo/paineis.js"></script>
+<script src="jogo/rede.js"></script>
+<script src="jogo/principal.js"></script>
 </body>
 </html>

@@ -17,7 +17,8 @@ AM.render = (() => {
     new ResizeObserver(ajustar).observe(tela.parentElement);
   }
   function ajustar() {
-    const r = tela.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 3);
+    const r = tela.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+    AM.BASE = { perto: 170, normal: 216, longe: 270 }[AM.opc.zoom] || 216;
     const W = Math.max(200, Math.round(r.width * d)), H = Math.max(150, Math.round(r.height * d));
     tela.width = W; tela.height = H;
     escala = Math.max(1, Math.floor(Math.min(W, H) / AM.BASE));
@@ -189,6 +190,8 @@ AM.render = (() => {
       b.strokeRect(a.x * 16 + .5, a.y * 16 + .5, 15, 15);
       b.fillStyle = 'rgba(255,255,255,.12)'; b.fillRect(a.x * 16, a.y * 16, 16, 16);
     }
+    // para onde você está andando (toque)
+    if (j.destino && !j.destino.ent) { const pulsa = 3 + Math.sin(t * 8); b.strokeStyle = 'rgba(255,255,255,.8)'; b.beginPath(); b.ellipse(j.destino.x, j.destino.y - 2, pulsa + 2, pulsa * .5 + 1, 0, 0, 7); b.stroke(); }
     // partículas
     for (const p of part) {
       b.globalAlpha = Math.max(0, 1 - p.idade / p.vida);

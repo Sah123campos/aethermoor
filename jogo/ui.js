@@ -18,10 +18,12 @@ AM.ui = (() => {
       <div id="cantoDir">
         <div id="relogio" class="peca"><span id="hData"></span><span id="hHora"></span><span id="hClima"></span></div>
         <canvas id="minimapa" width="96" height="96" title="Mapa (M)"></canvas>
+        <button id="btnMenu" aria-label="Menu" aria-expanded="false">☰ Menu</button>
         <div id="botoesJogo">
           <button data-acao="inventario">Inventário <kbd>E</kbd></button><button data-acao="construir">Construir <kbd>B</kbd></button>
           <button data-acao="missoes">Missões <kbd>Q</kbd></button><button data-acao="atributos">Atributos <kbd>C</kbd></button>
-          <button data-acao="opcoes">Opções <kbd>Esc</kbd></button>
+          <button data-acao="mapa">Mapa <kbd>M</kbd></button><button data-acao="conversa">Doidobot <kbd>H</kbd></button>
+          <button data-acao="opcoes">Opções <kbd>Esc</kbd></button><button data-acao="telaCheia" class="soToque">Tela cheia</button>
         </div>
       </div>
       <div id="roloJogo" hidden><span class="pau"></span><div class="perg"><button class="seta" data-r="-1" aria-label="Missão anterior">‹</button><span class="missaoAtual"></span><button class="seta" data-r="1" aria-label="Próxima missão">›</button><button class="recolher" aria-label="Recolher o rolo">▴</button></div><span class="pau"></span></div>
@@ -31,9 +33,22 @@ AM.ui = (() => {
       <div id="avisos"></div>
       <div id="pegou"></div>
       <div id="botBox"><div id="botCabeca" title="Doidobot (H dá uma dica, clique para conversar)"></div><div id="botBalao" hidden><span class="txt"></span><button hidden>OK</button></div></div>
-      <div id="toque" hidden><div id="joy"><i></i></div><button class="bToque" id="tInter">F</button><button class="bToque" id="tUsar">Usar</button></div>
+      <div id="dicaAcao" hidden></div>
+      <div id="obraBotoes" hidden><button class="btn ouro" id="obraOk">✔ Construir aqui</button><button class="btn claro" id="obraNao">✖ Cancelar</button></div>
+      <div id="toque" hidden><div id="joyZona"><div id="joy"><i></i></div></div>
+        <button class="bToque" id="tInter" aria-label="Ação"><span>Ação</span></button>
+        <button class="bToque" id="tUsar" aria-label="Usar o item da mão"><img alt=""><span>Usar</span></button>
+        <button class="bToque pequeno" id="tJutsu" hidden aria-label="Jutsu">忍</button></div>
       <div id="painel" hidden></div>`;
-    $('#botoesJogo').onclick = e => { const b = e.target.closest('button'); if (b) abrir(b.dataset.acao === 'missoes' ? 'quadro' : b.dataset.acao); };
+    $('#botoesJogo').onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      menu(false);
+      if (b.dataset.acao === 'telaCheia') return telaCheia();
+      abrir(b.dataset.acao === 'missoes' ? 'quadro' : b.dataset.acao);
+    };
+    $('#btnMenu').onclick = () => menu(!$('#botoesJogo').classList.contains('aberto'));
+    $('#obraOk').onclick = () => AM.construcao.confirmar();
+    $('#obraNao').onclick = () => { AM.construcao.cancelar(); AM.ui.aviso('Construção cancelada.'); };
     $('#minimapa').onclick = () => abrir('mapa');
     const rolo = $('#roloJogo');
     rolo.querySelector('.perg').onclick = e => {
@@ -71,8 +86,11 @@ AM.ui = (() => {
     if (painelAberto === 'inventario' || painelAberto === 'bau') AM.paineis.redesenhar();
   }
   let tNome;
-  function selecionar(i) {
-    AM.jog.sel = (i + 8) % 8; AM.jog.pesca = null;
+  // escolher de novo o item que já está na mão guarda o item (mão vazia)
+  function selecionar(i, alternar = true) {
+    i = (i + 8) % 8;
+    AM.jog.sel = alternar && i === AM.jog.sel ? -1 : i;
+    AM.jog.pesca = null;
     atualizarHotbar();
     const it = AM.jog.inv[AM.jog.sel], el = $('#nomeItem');
     el.textContent = it ? AM.ITENS[it.id].nome : '(mão vazia)';
@@ -225,7 +243,16 @@ AM.ui = (() => {
     cv.addEventListener('mousedown', e => { pos(e); ms.mexeu = performance.now(); if (e.button === 0) { ms.esq = true; ms.cliqueEsq = true; } if (e.button === 2) ms.cliqueDir = true; });
     addEventListener('mouseup', e => { if (e.button === 0) ms.esq = false; });
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    cv.addEventListener('wheel', e => { e.preventDefault(); if (!painelAberto) selecionar(AM.jog.sel + (e.deltaY > 0 ? 1 : -1)); }, { passive: false });
+    cv.addEventListener('wheel', e => { e.preventDefault(); if (!painelAberto) selecionar(Math.max(0, AM.jog.sel) + (AM.jog.sel < 0 ? 0 : e.deltaY > 0 ? 1 : -1), false); }, { passive: false });
+  }
+
+  // ---------- menu, tela cheia ----------
+  function menu(abrirMenu) { $('#botoesJogo').classList.toggle('aberto', abrirMenu); $('#btnMenu').setAttribute('aria-expanded', String(abrirMenu)); }
+  function telaCheia() {
+    const d = document;
+    if (d.fullscreenElement) d.exitFullscreen && d.exitFullscreen();
+    else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => aviso('Este navegador não deixou abrir em tela cheia.'));
+    else aviso('Este navegador não tem tela cheia. No iPhone, use "Adicionar à Tela de Início".');
   }
 
   // ---------- toque ----------
@@ -235,28 +262,119 @@ AM.ui = (() => {
     AM.toqueAtivo = true;
     document.body.classList.add('toque');
     $('#toque').hidden = false;
-    const joy = $('#joy'), bola = joy.querySelector('i'), t = AM.input.toque;
-    let idJoy = null;
+    const zona = $('#joyZona'), joy = $('#joy'), bola = joy.querySelector('i'), t = AM.input.toque;
+    let idJoy = null, centro = null;
+    // o direcional aparece onde o dedão encostar (dentro da área da esquerda)
     const mover = e => {
-      const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      let dx = (e.clientX - cx) / (r.width / 2), dy = (e.clientY - cy) / (r.height / 2);
+      let dx = (e.clientX - centro.x) / 52, dy = (e.clientY - centro.y) / 52;
       const n = Math.hypot(dx, dy); if (n > 1) { dx /= n; dy /= n; }
-      t.x = Math.abs(dx) > .2 ? dx : 0; t.y = Math.abs(dy) > .2 ? dy : 0; t.ativo = true;
-      bola.style.transform = `translate(${dx * 34}px, ${dy * 34}px)`;
+      t.x = Math.abs(dx) > .18 ? dx : 0; t.y = Math.abs(dy) > .18 ? dy : 0; t.ativo = true;
+      bola.style.transform = `translate(${dx * 38}px, ${dy * 38}px)`;
     };
-    joy.addEventListener('pointerdown', e => { idJoy = e.pointerId; joy.setPointerCapture(e.pointerId); mover(e); });
-    joy.addEventListener('pointermove', e => { if (e.pointerId === idJoy) mover(e); });
-    const soltar = e => { if (e.pointerId !== idJoy) return; idJoy = null; t.ativo = false; t.x = t.y = 0; bola.style.transform = ''; };
-    joy.addEventListener('pointerup', soltar); joy.addEventListener('pointercancel', soltar);
+    zona.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      idJoy = e.pointerId; zona.setPointerCapture(e.pointerId);
+      const r = zona.getBoundingClientRect();
+      centro = { x: e.clientX, y: e.clientY };
+      joy.style.left = (e.clientX - r.left - 65) + 'px'; joy.style.top = (e.clientY - r.top - 65) + 'px';
+      joy.classList.add('ativo');
+      mover(e);
+    });
+    zona.addEventListener('pointermove', e => { if (e.pointerId === idJoy) mover(e); });
+    const soltar = e => { if (e.pointerId !== idJoy) return; idJoy = null; t.ativo = false; t.x = t.y = 0; bola.style.transform = ''; joy.classList.remove('ativo'); joy.style.left = joy.style.top = ''; };
+    zona.addEventListener('pointerup', soltar); zona.addEventListener('pointercancel', soltar);
     const botao = (el, acao) => {
-      el.addEventListener('pointerdown', e => { e.preventDefault(); t.botoes.add(acao); t.novos.add(acao); });
-      const fim = () => t.botoes.delete(acao);
+      el.addEventListener('pointerdown', e => { e.preventDefault(); t.botoes.add(acao); t.novos.add(acao); el.classList.add('apertado'); });
+      const fim = () => { t.botoes.delete(acao); el.classList.remove('apertado'); };
       el.addEventListener('pointerup', fim); el.addEventListener('pointercancel', fim); el.addEventListener('pointerleave', fim);
     };
-    botao($('#tUsar'), 'usar'); botao($('#tInter'), 'interagir');
+    botao($('#tUsar'), 'usar'); botao($('#tInter'), 'interagir'); botao($('#tJutsu'), 'jutsu');
+    // tocar no mundo: perto age, longe anda até lá
+    const cv = $('#telaJogo');
+    let ini = null;
+    cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') ini = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    cv.addEventListener('pointerup', e => {
+      if (e.pointerType === 'mouse' || !ini) return;
+      const longo = performance.now() - ini.t > 450, mexeu = Math.hypot(e.clientX - ini.x, e.clientY - ini.y) > 14;
+      ini = null;
+      if (!mexeu) toqueNoMundo(e.clientX, e.clientY, longo);
+    });
+  }
+  function paraMundo(cx, cy) {
+    const cv = $('#telaJogo'), r = cv.getBoundingClientRect(), d = cv.width / r.width, cam = AM.render.cam, k = d / AM.render.escala;
+    return { x: (cx - r.left) * k + Math.round(cam.x), y: (cy - r.top) * k + Math.round(cam.y) };
+  }
+  function toqueNoMundo(cx, cy, longo) {
+    if (painelAberto || AM.morto) return;
+    const j = AM.jog, p = paraMundo(cx, cy), tx = Math.floor(p.x / 16), ty = Math.floor(p.y / 16);
+    if (AM.construcao.ativo()) { AM.construcao.fixar(tx, ty); return; }
+    // alguém ali? (morador, animal, veículo)
+    const e = AM.ents.filter(x => ['npc', 'animal', 'veiculo'].includes(x.classe) && Math.hypot(x.x - p.x, x.y - 8 - p.y) < 14)
+      .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    if (e) {
+      const falar = () => { virarPara(e.x, e.y); AM.criaturas.interagirCom(e); };
+      if (Math.hypot(e.x - j.x, e.y - j.y) < 26) falar(); else j.destino = { ent: e, ao: falar };
+      return;
+    }
+    const jx = Math.floor(j.x / 16), jy = Math.floor((j.y - 4) / 16);
+    const perto = Math.abs(tx - jx) <= 1 && Math.abs(ty - jy) <= 1 && !(tx === jx && ty === jy);
+    const agir = () => {
+      virarPara(tx * 16 + 8, ty * 16 + 8);
+      AM.alvoForcado = { x: tx, y: ty };
+      const a = AM.acaoContexto();
+      if (a && a.tile && !longo) a.fazer();
+      else if (longo && a) a.fazer();
+      else { AM.jog.cd = 0; AM.usar(); }
+      AM.alvoForcado = null;
+    };
+    if (perto) return agir();
+    // longe: anda até lá; se for algo que se usa (cama, baú, fogueira...), usa ao chegar
+    const ob = AM.OBJ[AM.m.ob(tx, ty)], interessante = ob && (ob.bau || ob.cama || ob.estacao || ob.quadro || ob.venda || ob.balcao || ob.entrada || ob.saida || ob.tesouro || ob.cocho || ob.colmeia || ob.agua);
+    const destinoX = tx * 16 + 8, destinoY = ty * 16 + (interessante || AM.m.solido(tx, ty) ? 28 : 12);
+    j.destino = { x: destinoX, y: destinoY, ao: interessante ? () => { j.dir = 'cima'; AM.alvoForcado = { x: tx, y: ty }; const a = AM.acaoContexto(); if (a) a.fazer(); AM.alvoForcado = null; } : null };
+    AM.fx.soltar({ x: destinoX, y: destinoY - 2, vida: .5, cor: '#ffffff', tam: 2 });
+  }
+  function virarPara(x, y) {
+    const j = AM.jog, dx = x - j.x, dy = y - (j.y - 6);
+    j.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'esq' : 'dir') : (dy < 0 ? 'cima' : 'baixo');
   }
 
-  function quadro(dt) { atualizarHud(dt); }
+  // ---------- botão de ação e dica "F · Falar" ----------
+  let tAcao = 0, ultimaAcao = '', ultimoItem = null;
+  function atualizarAcao(dt) {
+    if ((tAcao -= dt) > 0) return;
+    tAcao = .12;
+    const a = !painelAberto && !AM.morto ? AM.acaoContexto() : null;
+    const dica = $('#dicaAcao');
+    if (AM.toqueAtivo) {
+      const b = $('#tInter');
+      const rot = a ? a.curto : 'Ação';
+      if (rot !== ultimaAcao) { b.querySelector('span').textContent = rot; ultimaAcao = rot; }
+      b.classList.toggle('vazio', !a);
+      const s = AM.inv.selecionado(), id = s ? s.id : null;
+      if (id !== ultimoItem) {
+        ultimoItem = id;
+        const img = $('#tUsar img');
+        if (id) { img.src = AM.spr.iconeURL(id); img.hidden = false; } else img.hidden = true;
+        $('#tUsar span').textContent = id ? (AM.ITENS[id].comida ? 'Comer' : 'Usar') : 'Mão';
+      }
+      $('#tJutsu').hidden = !AM.jog.faixa;
+      dica.hidden = true;
+    } else {
+      if (!a || AM.construcao.ativo()) { dica.hidden = true; }
+      else {
+        const pos = a.alvo ? { x: a.alvo.x, y: a.alvo.y - 30 } : a.tile ? { x: a.tile.x * 16 + 8, y: a.tile.y * 16 - 6 } : { x: AM.jog.x, y: AM.jog.y - 34 };
+        const cv = $('#telaJogo'), r = cv.getBoundingClientRect(), k = r.width / cv.width, cam = AM.render.cam;
+        dica.innerHTML = `<kbd>${AM.input.nomeTecla(AM.input.tecla('interagir'))}</kbd> ${a.rotulo}`;
+        dica.style.left = ((pos.x - cam.x) * AM.render.escala * k) + 'px';
+        dica.style.top = ((pos.y - cam.y) * AM.render.escala * k) + 'px';
+        dica.hidden = false;
+      }
+    }
+    $('#obraBotoes').hidden = !AM.construcao.ativo();
+  }
+
+  function quadro(dt) { atualizarHud(dt); atualizarAcao(dt); }
 
   return { montar, atualizarHotbar, selecionar, atualizarRolo, atualizarTutorial, aviso, pegou, missaoConcluida, resumoDia, abrir, fechar, quadro, htmlSlot,
     aberto: () => painelAberto, corTile };

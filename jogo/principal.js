@@ -141,9 +141,12 @@ AM.jogo = (() => {
     else if (I.seg('usar') || I.apertou('usar') || ms.esq) AM.usar();
     if (I.apertou('interagir') || ms.cliqueDir) AM.interagir();
     // movimento
-    const ex = I.eixo();
+    let ex = I.eixo();
+    if (ex.x || ex.y) j.destino = null;
+    else if (j.destino) ex = andarAteDestino(dt);
     j.andando = !!(ex.x || ex.y);
-    j.correndo = I.seg('correr') && j.andando && !j.montaria;
+    const t = I.toque;
+    j.correndo = (I.seg('correr') || (t.ativo && Math.hypot(t.x, t.y) > .93) || (j.destino && j.destino.correr)) && j.andando && !j.montaria;
     if (j.andando) {
       let vel = 70 * AM.atrib.velocidade() * (j.correndo ? 1.45 : 1);
       if (j.montaria === 'carrinho') vel *= (AM.m.ch(Math.floor(j.x / 16), Math.floor(j.y / 16)) === AM.CH.CAMINHO ? 2.4 : 1.7) * (AM.construcao.temCavalo() ? 1.3 : 1);
@@ -156,6 +159,22 @@ AM.jogo = (() => {
       if (andou > 64) { andou = -1e9; AM.ev.emit('moveu'); }
       if (j.montaria === 'carrinho' && Math.random() < dt * 4) AM.fx.nuvem(j.x, j.y, 1, ['#c9b080'], 10, -5, .5);
     }
+  }
+
+  // toque longe: anda até lá e, se tiver, faz a ação ao chegar
+  function andarAteDestino(dt) {
+    const j = AM.jog, d = j.destino;
+    const alvo = d.ent ? { x: d.ent.x, y: d.ent.y } : d;
+    const dx = alvo.x - j.x, dy = alvo.y - j.y, dist = Math.hypot(dx, dy);
+    if (dist < (d.ent ? 20 : 5)) {
+      j.destino = null;
+      if (d.ao) d.ao();
+      return { x: 0, y: 0 };
+    }
+    d.preso = (d.antes && Math.hypot(j.x - d.antes.x, j.y - d.antes.y) < .2) ? (d.preso || 0) + dt : 0;
+    d.antes = { x: j.x, y: j.y };
+    if (d.preso > .35) { j.destino = null; if (d.ao && dist < 40) d.ao(); return { x: 0, y: 0 }; }
+    return { x: dx / dist, y: dy / dist };
   }
 
   function atualizar(dt) {

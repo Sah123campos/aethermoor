@@ -151,3 +151,91 @@ body.toque #avisos { bottom: 170px; }
   #colunaEsq { width: 46vw; }
   #botoesJogo { max-width: 40vw; }
 }
+
+/* conversa com moradores */
+.npcCaixa { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.npcRetrato { display: grid; justify-items: center; gap: 2px; background: radial-gradient(circle at 50% 35%, #fff8e2, var(--papel-escuro)); border: 3px solid var(--madeira); border-radius: 8px; padding: 8px 10px; text-align: center; }
+.npcRetrato canvas { width: 96px; height: 144px; image-rendering: pixelated; }
+.npcRetrato small { color: #8a5a2e; font-size: .78em; max-width: 9em; }
+.coracoes { color: #d8343a; letter-spacing: .05em; font-size: .85em; }
+.npcFala { display: grid; gap: 10px; min-width: 0; }
+.balaoNpc { position: relative; background: #fffaf0; border: 2px solid var(--madeira); border-radius: 10px; padding: 10px 12px; font-size: 1.05em; line-height: 1.4; margin: 0; }
+.npcBotoes { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 520px) {
+  .npcCaixa { grid-template-columns: 1fr; }
+  .npcRetrato { grid-template-columns: auto 1fr; justify-items: start; text-align: left; column-gap: 10px; }
+  .npcRetrato canvas { grid-row: span 3; width: 64px; height: 96px; }
+}
+
+/* chat com o Doidobot */
+.so-leitor { position: absolute; left: -9999px; }
+.iaOn { color: #2f7a3a; font-weight: 700; }
+.chatBot { display: flex; flex-direction: column; gap: 6px; max-height: min(46vh, 22em); overflow-y: auto; background: #fffaf0; border: 2px solid var(--papel-escuro); border-radius: 8px; padding: 8px; overscroll-behavior: contain; }
+.msg { margin: 0; padding: 6px 10px; border-radius: 10px; max-width: 85%; line-height: 1.35; overflow-wrap: anywhere; }
+.msg.jogador { align-self: flex-end; background: #dbeafe; border: 1px solid #9ab8e0; }
+.msg.doidobot { align-self: flex-start; background: #fff3c4; border: 1px solid var(--ouro-escuro); }
+.msg.pensando { opacity: .7; font-style: italic; }
+.formBot { display: flex; gap: 6px; }
+.formBot input { flex: 1; min-width: 0; font: inherit; font-size: max(16px, 1em); border: 2px solid var(--madeira); border-radius: 6px; padding: 6px 8px; background: #fffaf0; color: var(--tinta); }
+.sugestoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- dica de ação (computador) e botões da obra ---------- */
+#dicaAcao { position: absolute; transform: translate(-50%, -100%); background: var(--sombra); border: 2px solid var(--ouro); border-radius: 6px; padding: 1px 8px; font-size: .8em; white-space: nowrap; pointer-events: none; z-index: 2; }
+#dicaAcao kbd { background: var(--ouro); color: var(--tinta); border-radius: 3px; padding: 0 4px; font: inherit; font-weight: 700; }
+#obraBotoes { position: absolute; left: 50%; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 74px); transform: translateX(-50%); display: flex; gap: 8px; z-index: 3; }
+#obraBotoes .btn { padding: .5em 1em; }
+#btnMenu { display: none; font: inherit; font-size: .85em; background: var(--sombra); color: var(--luz); border: 2px solid rgba(255, 255, 255, .3); border-radius: 6px; padding: .3em .7em; cursor: pointer; }
+.soToque { display: none !important; }
+
+/* ---------- celular e tablet ---------- */
+body.em-jogo { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+body.em-jogo input, body.em-jogo textarea { -webkit-user-select: text; user-select: text; }
+.caixaPainel { touch-action: pan-y; overscroll-behavior: contain; }
+body.toque { --hb: clamp(42px, 11vw, 54px); }
+body.toque .soToque { display: block !important; }
+body.toque .slot { width: var(--hb); }
+body.toque #hotbar { bottom: max(6px, env(safe-area-inset-bottom)); gap: 2px; padding: 3px; }
+body.toque #nomeItem { bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb) + 10px); }
+body.toque #btnMenu { display: block; }
+body.toque #botoesJogo { display: none; flex-direction: column; align-items: stretch; max-width: none; background: var(--sombra); border-radius: 8px; padding: 6px; z-index: 6; }
+body.toque #botoesJogo.aberto { display: flex; }
+body.toque #botoesJogo button { font-size: 1em; padding: .5em .9em; text-align: left; }
+body.toque #botoesJogo kbd { display: none; }
+#toque { position: absolute; inset: 0; height: auto; pointer-events: none; }
+#joyZona { position: absolute; left: 0; bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 10px); width: 50%; height: min(45%, 260px); pointer-events: auto; touch-action: none; }
+#joy { position: absolute; left: max(14px, env(safe-area-inset-left)); bottom: 8px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, .08); border: 2px solid rgba(255, 255, 255, .25); transition: background .15s; }
+#joy.ativo { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .5); transition: none; }
+#joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: rgba(255, 255, 255, .4); box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.bToque { position: absolute; display: grid; place-items: center; align-content: center; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5); background: rgba(8, 6, 20, .55); color: var(--luz); font: inherit; font-weight: 700; pointer-events: auto; touch-action: none; transition: transform .08s; }
+.bToque img { width: 30px; image-rendering: pixelated; }
+.bToque span { font-size: .72em; line-height: 1.1; max-width: 6em; text-align: center; }
+.bToque.apertado { transform: scale(.9); background: rgba(255, 210, 63, .5); }
+#tUsar { right: max(16px, env(safe-area-inset-right)); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 26px); width: 80px; height: 80px; background: rgba(255, 210, 63, .28); border-color: var(--ouro); }
+#tInter { right: calc(max(16px, env(safe-area-inset-right)) + 90px); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 12px); width: 66px; height: 66px; }
+#tInter.vazio { opacity: .4; }
+#tJutsu { right: calc(max(16px, env(safe-area-inset-right)) + 100px); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 88px); width: 46px; height: 46px; font-size: 1.1em; }
+body.toque #botBox { left: auto; bottom: auto; right: max(8px, env(safe-area-inset-right)); top: calc(max(8px, env(safe-area-inset-top)) + clamp(70px, 9vw, 120px) + 4.6em); flex-direction: row-reverse; align-items: flex-start; max-width: 72vw; }
+body.toque #botCabeca { width: 52px; }
+body.toque #botBalao { margin: 6px 0 0; font-size: .85em; }
+body.toque #botBalao::before { left: auto; right: -10px; top: 12px; bottom: auto; border-right-color: transparent; border-left-color: var(--madeira); }
+body.toque #avisos { bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb) + 16px); width: min(30em, 56vw); }
+body.toque #pegou { bottom: auto; top: 46%; }
+body.toque .caixaPainel { padding: 10px; }
+body.toque .caixaPainel .btn { padding: .55em 1em; }
+body.toque .fechar { padding: .4em 1em; }
+body.toque .grade { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
+@media (max-width: 640px) {
+  body.toque #roloJogo { top: auto; bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb) + 172px); width: 94vw; }
+  body.toque #avisos { bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb) + 214px); width: 92vw; }
+  body.toque #colunaEsq { width: 50vw; }
+  #painel { padding: 4px; }
+  .caixaPainel { width: 100%; max-height: 100%; border-width: 3px; }
+}
+@media (max-height: 460px) and (orientation: landscape) {
+  body.toque #joyZona { height: 55%; }
+  body.toque #botBox { top: calc(max(6px, env(safe-area-inset-top)) + 2.4em); right: calc(max(8px, env(safe-area-inset-right)) + 72px); }
+  body.toque #tutorialCard { display: none; }
+  #minimapa { width: 64px; }
+}
+body.toque #tutorialCard span { display: none; }
+body.toque #tutorialCard { grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; }
