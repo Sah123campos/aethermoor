@@ -1,0 +1,153 @@
+/* Interface do jogo: HUD, hotbar, rolo de missões, Doidobot, painéis e toque.
+   Usa os mesmos tokens do prólogo (pergaminho, madeira, ouro). */
+body.em-jogo { padding: 0; align-items: stretch; }
+body.em-jogo #jogo { width: 100%; height: 100dvh; }
+body.em-jogo #palco { aspect-ratio: auto; height: 100%; border-radius: 0; box-shadow: none; cursor: default; }
+body.em-jogo #tela, body.em-jogo #vinheta, body.em-jogo #olhos, body.em-jogo #barra, body.em-jogo #hud,
+body.em-jogo #rolo, body.em-jogo #titulo, body.em-jogo #dialogo, body.em-jogo #legenda, body.em-jogo #pensamento { display: none !important; }
+body.em-jogo #preto { opacity: 0 !important; transition: opacity .4s; }
+#telaJogo { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; touch-action: none; }
+#ui { position: absolute; inset: 0; pointer-events: none; font-size: calc(clamp(11px, 1.05vw + 4px, 17px) * var(--escala-ui, 1)); color: var(--luz); }
+#ui > * { pointer-events: auto; }
+#ui .peca { background: var(--sombra); border: 2px solid rgba(255, 255, 255, .2); border-radius: 6px; }
+
+/* HUD */
+#colunaEsq { position: absolute; top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); display: grid; gap: 6px; width: min(15em, 42vw); pointer-events: none; }
+#hudJogo { display: grid; gap: 4px; padding: 6px 8px; pointer-events: none; }
+.barra { position: relative; height: 1.05em; border-radius: 4px; background: rgba(0, 0, 0, .55); overflow: hidden; border: 1px solid rgba(255, 255, 255, .25); }
+.barra i { position: absolute; inset: 0; width: var(--v, 100%); transition: width .3s; }
+.barra span { position: relative; display: block; padding-left: .4em; font-size: .72em; line-height: 1.45; text-shadow: 0 1px 0 #000; font-variant-numeric: tabular-nums; }
+.barra.vida i { background: linear-gradient(#ff7a7a, #c8323a); }
+.barra.fome i { background: linear-gradient(#ffc86a, #c8822a); }
+.barra.sede i { background: linear-gradient(#7ad0ff, #2a7ac8); }
+.daltonico .barra.vida i { background: linear-gradient(#ffd27a, #c88a00); }
+.daltonico .barra.fome i { background: linear-gradient(#e8e8e8, #8a8a8a); }
+.daltonico .barra.sede i { background: linear-gradient(#7aa8ff, #2a48c8); }
+.barra.baixa { animation: pulsaBarra .6s ease-in-out infinite alternate; }
+@keyframes pulsaBarra { to { border-color: #ff5a5a; } }
+.linhaNivel { display: flex; align-items: center; gap: 6px; font-size: .8em; }
+.linhaNivel b { background: var(--ouro); color: var(--tinta); border-radius: 4px; padding: 0 .35em; }
+.xp { flex: 1; height: .45em; background: rgba(0, 0, 0, .55); border-radius: 3px; overflow: hidden; }
+.xp i { display: block; height: 100%; width: var(--v, 0%); background: #9a7aff; transition: width .3s; }
+.ouroHud { color: var(--ouro); font-variant-numeric: tabular-nums; }
+
+#cantoDir { position: absolute; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); display: grid; justify-items: end; gap: 6px; }
+#relogio { display: flex; gap: .6em; padding: 4px 8px; font-size: .85em; font-variant-numeric: tabular-nums; }
+#minimapa { width: clamp(70px, 9vw, 120px); height: auto; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; border: 2px solid rgba(255, 255, 255, .35); background: #102030; cursor: pointer; }
+#botoesJogo { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 12em; }
+#botoesJogo button { font: inherit; font-size: .78em; background: var(--sombra); color: var(--luz); border: 2px solid rgba(255, 255, 255, .25); border-radius: 6px; padding: .2em .5em; cursor: pointer; }
+#botoesJogo button:hover { border-color: var(--ouro); }
+#botoesJogo kbd { opacity: .65; font: inherit; }
+
+/* rolo de missões */
+#roloJogo { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: stretch; width: min(34em, 46vw); font-size: .86em; }
+#roloJogo .pau { width: .6em; border-radius: 4px; background: linear-gradient(90deg, #4a2a12, #a8673a, #4a2a12); margin: -.2em 0; }
+#roloJogo .perg { flex: 1; min-width: 0; background: var(--papel); color: var(--tinta); display: flex; align-items: center; gap: .4em; padding: .3em .4em; cursor: pointer; }
+#roloJogo .perg button { font: inherit; background: none; border: none; color: var(--madeira); cursor: pointer; padding: 0 .2em; font-weight: 700; }
+#roloJogo .missaoAtual { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity .25s; }
+#roloJogo .missaoAtual small { color: #8a5a2e; margin-left: .3em; font-variant-numeric: tabular-nums; }
+#roloJogo.recolhido { width: auto; }
+#roloJogo.recolhido .missaoAtual, #roloJogo.recolhido .seta { display: none; }
+#roloLista { position: absolute; top: calc(max(8px, env(safe-area-inset-top)) + 2.2em); left: 50%; transform: translateX(-50%); width: min(30em, 80vw); background: var(--papel); color: var(--tinta); border: 3px solid var(--madeira); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; font-size: .85em; }
+#roloLista .m { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+#roloLista .m small { grid-column: 1 / -1; color: #8a5a2e; }
+.progBarra { grid-column: 1 / -1; height: 5px; background: var(--papel-escuro); border-radius: 3px; overflow: hidden; }
+.progBarra i { display: block; height: 100%; width: var(--v); background: #5aa548; }
+
+/* hotbar */
+#hotbar { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 3px; padding: 4px; }
+.slot { position: relative; width: clamp(34px, 4.2vw, 52px); aspect-ratio: 1; background: rgba(246, 231, 200, .9); border: 2px solid var(--madeira); border-radius: 6px; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.slot img { width: 76%; image-rendering: pixelated; pointer-events: none; }
+.slot .q { position: absolute; right: 2px; bottom: 0; font-size: .72em; color: var(--tinta); font-weight: 700; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+.slot .n { position: absolute; left: 3px; top: 0; font-size: .62em; color: #8a5a2e; }
+.slot .carga { position: absolute; left: 3px; right: 3px; bottom: 2px; height: 3px; background: rgba(0, 0, 0, .2); }
+.slot .carga i { display: block; height: 100%; width: var(--v); background: #3a8ad6; }
+.slot.sel { border-color: var(--ouro); box-shadow: 0 0 0 2px var(--ouro), 0 0 12px rgba(255, 210, 63, .6); transform: translateY(-3px); }
+#nomeItem { position: absolute; bottom: calc(max(8px, env(safe-area-inset-bottom)) + clamp(44px, 5vw, 64px)); left: 50%; transform: translateX(-50%); padding: 2px 10px; font-size: .85em; transition: opacity .4s; pointer-events: none; }
+
+/* avisos e itens coletados */
+#avisos { position: absolute; left: 50%; bottom: calc(max(8px, env(safe-area-inset-bottom)) + clamp(70px, 8vw, 96px)); transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; pointer-events: none; width: min(36em, 92vw); }
+.aviso { background: var(--sombra); border: 2px solid rgba(255, 255, 255, .25); border-radius: 6px; padding: 4px 12px; text-align: center; animation: surge .25s ease-out both; }
+.aviso.ouro { border-color: var(--ouro); color: #fff3b0; }
+.aviso.roxo { border-color: #b06aff; color: #e8d4ff; }
+.aviso.sai { opacity: 0; transition: opacity .5s; }
+#pegou { position: absolute; right: max(8px, env(safe-area-inset-right)); bottom: calc(max(8px, env(safe-area-inset-bottom)) + 10px); display: grid; gap: 3px; justify-items: end; pointer-events: none; }
+#pegou div { display: flex; align-items: center; gap: 6px; background: var(--sombra); border-radius: 6px; padding: 2px 8px; font-size: .8em; animation: surge .2s ease-out both; }
+#pegou img { width: 1.4em; image-rendering: pixelated; }
+
+/* Doidobot sempre na tela */
+#botBox { position: absolute; left: max(8px, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom)); display: flex; align-items: flex-end; gap: 6px; max-width: min(26em, 60vw); }
+#botCabeca { width: clamp(56px, 7vw, 92px); aspect-ratio: 1; flex: none; cursor: pointer; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .45)); }
+#botBalao { position: relative; margin-bottom: 30%; background: var(--papel); color: var(--tinta); border: 3px solid var(--madeira); border-radius: 10px; padding: 6px 10px; font-size: .9em; line-height: 1.35; box-shadow: 0 4px 0 #2b170a; }
+#botBalao::before { content: ""; position: absolute; left: -10px; bottom: 10px; border: 7px solid transparent; border-right-color: var(--madeira); }
+#botBalao.surge { animation: surge .25s ease-out both; }
+#botBalao button { margin-left: 6px; font: inherit; font-size: .8em; background: var(--madeira); color: var(--papel); border: none; border-radius: 4px; padding: 0 8px; cursor: pointer; }
+body.toque #botBox { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 150px); }
+
+#tutorialCard { padding: 6px 8px; font-size: .78em; display: grid; gap: 4px; pointer-events: auto; }
+#tutorialCard b { color: var(--ouro); }
+#tutorialCard button { justify-self: start; font: inherit; background: none; color: #c9c5ef; border: 1px solid rgba(255, 255, 255, .3); border-radius: 4px; cursor: pointer; padding: 0 6px; }
+
+/* painéis */
+#painel { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(8, 6, 20, .55); z-index: 20; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+.caixaPainel { width: min(46em, 100%); max-height: 100%; overflow: auto; background: var(--papel); color: var(--tinta); border: 4px solid var(--madeira); border-radius: 10px; box-shadow: 0 6px 0 #2b170a, 0 20px 60px rgba(0, 0, 0, .6); padding: 12px 14px; display: grid; gap: 10px; animation: surge .2s ease-out both; }
+.caixaPainel h2 { margin: 0; font-size: 1.25em; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.caixaPainel h3 { margin: 0; font-size: 1em; color: #8a5a2e; text-transform: uppercase; letter-spacing: .08em; }
+.caixaPainel p { margin: 0; }
+.fechar { font: inherit; background: var(--madeira); color: var(--papel); border: none; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+.abas { display: flex; gap: 4px; flex-wrap: wrap; }
+.abas button { font: inherit; background: #fffaf0; color: var(--tinta); border: 2px solid var(--madeira); border-radius: 6px 6px 0 0; padding: 2px 10px; cursor: pointer; }
+.abas button[aria-selected="true"] { background: var(--madeira); color: var(--papel); }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(34px, 4.2vw, 50px), 1fr)); gap: 4px; }
+.grade .slot { width: 100%; }
+.lista { display: grid; gap: 6px; }
+.linha { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; background: #fffaf0; border: 2px solid var(--papel-escuro); border-radius: 8px; padding: 6px 8px; }
+.linha img { width: 32px; image-rendering: pixelated; }
+.linha small { display: block; color: #8a5a2e; }
+.linha.indisponivel { opacity: .55; }
+.btn { font: inherit; background: var(--madeira); color: var(--papel); border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-weight: 700; white-space: nowrap; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.claro { background: #fffaf0; color: var(--tinta); border: 2px solid var(--madeira); }
+.btn.ouro { background: var(--ouro); color: var(--tinta); }
+.ing { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: .85em; }
+.ing span { display: inline-flex; align-items: center; gap: 2px; }
+.ing img { width: 18px; image-rendering: pixelated; }
+.ing .falta { color: #b3261e; }
+.detalhe { background: #fffaf0; border: 2px dashed var(--papel-escuro); border-radius: 8px; padding: 6px 10px; min-height: 3em; font-size: .9em; }
+.atrib { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 10px; align-items: center; }
+.atrib small { color: #8a5a2e; display: block; }
+#mapaGrande { width: 100%; max-width: 560px; aspect-ratio: 1; image-rendering: pixelated; border-radius: 8px; border: 3px solid var(--madeira); justify-self: center; }
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85em; }
+.legenda i { display: inline-block; width: .8em; height: .8em; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+.opcoes { display: grid; gap: 8px; }
+.opcoes .op { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.opcoes small { display: block; color: #8a5a2e; }
+.opcoes select, .opcoes input[type=text] { font: inherit; border: 2px solid var(--madeira); border-radius: 6px; background: #fffaf0; color: var(--tinta); padding: 2px 6px; }
+.teclas { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: .9em; }
+.teclas button { font: inherit; min-width: 6em; background: #fffaf0; border: 2px solid var(--madeira); border-radius: 6px; cursor: pointer; }
+.teclas button.esperando { background: var(--ouro); }
+.resumo { text-align: center; }
+.resumo ul { text-align: left; margin: 0; padding-left: 1.2em; }
+
+/* missão concluída */
+.concluida { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: var(--papel); color: var(--tinta); border: 4px solid var(--ouro); border-radius: 10px; padding: 10px 18px; text-align: center; box-shadow: 0 0 0 4px var(--madeira), 0 10px 40px rgba(0, 0, 0, .5); animation: carimbo .5s cubic-bezier(.3, 1.8, .5, 1) both; pointer-events: none; z-index: 15; }
+.concluida b { display: block; font-size: 1.4em; color: #b8860b; letter-spacing: .06em; }
+
+/* controles de toque */
+#toque { position: absolute; inset: auto 0 0 0; height: 160px; pointer-events: none; }
+#toque > * { pointer-events: auto; }
+#joy { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, .12); border: 2px solid rgba(255, 255, 255, .3); touch-action: none; }
+#joy i { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: rgba(255, 255, 255, .35); }
+.bToque { position: absolute; width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .45); background: rgba(8, 6, 20, .5); color: var(--luz); font: inherit; font-size: .8em; touch-action: none; }
+#tUsar { right: max(20px, env(safe-area-inset-right)); bottom: max(70px, env(safe-area-inset-bottom)); background: rgba(255, 210, 63, .35); }
+#tInter { right: max(96px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); }
+body.toque #hotbar { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 4px); left: 50%; }
+body.toque #avisos { bottom: 170px; }
+@media (max-width: 640px) {
+  #roloJogo { top: auto; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 56px); width: 92vw; }
+  #botBox { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 96px); }
+  body.toque #botBox { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 170px); }
+  #avisos { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 96px); }
+  #colunaEsq { width: 46vw; }
+  #botoesJogo { max-width: 40vw; }
+}
