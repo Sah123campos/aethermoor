@@ -2,7 +2,7 @@
 // Servidor de Aethermoor: entrega os arquivos do jogo e cuida das salas
 // cooperativas por WebSocket (sem dependências: só o Node).
 //
-//   node servidor/servidor.js        (porta 8080; mude com PORT=3000)
+//   node servidor.js        (porta 8080; mude com PORT=3000)
 //
 // Abra http://localhost:8080 e mande para os amigos o seu endereço na rede
 // (ex.: http://192.168.0.10:8080) junto com o código da sala.
@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const RAIZ = path.resolve(__dirname, '..');
+const RAIZ = __dirname;
 const PASTA_SALAS = path.join(__dirname, 'salas');
 const PORTA = Number(process.env.PORT) || 8080;
 const MAX_JOGADORES = 8;
@@ -29,7 +29,7 @@ const servidor = http.createServer((req, res) => {
   if (url === '/') url = '/index.html';
   const arq = path.normalize(path.join(RAIZ, url));
   // nada fora do jogo nem dentro da pasta do servidor (onde ficam as salas salvas)
-  if (!arq.startsWith(RAIZ + path.sep) || arq.startsWith(path.join(RAIZ, 'servidor') + path.sep) || path.basename(arq).startsWith('.')) { res.writeHead(403); return res.end(); }
+  if (!arq.startsWith(RAIZ + path.sep) || arq.startsWith(path.join(RAIZ, 'salas') + path.sep) || path.basename(arq).startsWith('.')) { res.writeHead(403); return res.end(); }
   fs.readFile(arq, (erro, dados) => {
     if (erro) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Não encontrado'); }
     res.writeHead(200, { 'Content-Type': TIPOS[path.extname(arq)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
