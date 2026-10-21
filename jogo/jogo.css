@@ -202,17 +202,24 @@ body.toque #botoesJogo.aberto { display: flex; }
 body.toque #botoesJogo button { font-size: 1em; padding: .5em .9em; text-align: left; }
 body.toque #botoesJogo kbd { display: none; }
 #toque { position: absolute; inset: 0; height: auto; pointer-events: none; }
-#joyZona { position: absolute; left: 0; bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 10px); width: 50%; height: min(45%, 260px); pointer-events: auto; touch-action: none; }
-#joy { position: absolute; left: max(14px, env(safe-area-inset-left)); bottom: 8px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, .08); border: 2px solid rgba(255, 255, 255, .25); transition: background .15s; }
-#joy.ativo { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .5); transition: none; }
-#joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: rgba(255, 255, 255, .4); box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
-.bToque { position: absolute; display: grid; place-items: center; align-content: center; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .5); background: rgba(8, 6, 20, .55); color: var(--luz); font: inherit; font-weight: 700; pointer-events: auto; touch-action: none; transition: transform .08s; }
+#joyZona { position: absolute; left: 0; top: 18%; bottom: 0; width: 50%; pointer-events: auto; touch-action: none; }
+/* parado ele fica clarinho no canto; ao encostar o dedão, aparece embaixo dele */
+#joy { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: calc(max(8px, env(safe-area-inset-bottom)) + 8px); width: 128px; height: 128px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, .06) 40%, rgba(255, 255, 255, .13) 70%, rgba(255, 210, 63, .35) 71%, rgba(255, 210, 63, 0) 74%); opacity: .5; transition: opacity .2s; }
+#joy.ativo { opacity: 1; transition: none; }
+#joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(255, 244, 200, .85), rgba(255, 210, 63, .6) 60%, rgba(130, 90, 30, .6)); box-shadow: 0 0 0 2px rgba(11, 8, 18, .5), 0 2px 6px rgba(0, 0, 0, .35); }
+body.toque #hotbar, body.toque #colunaEsq, body.toque #roloJogo { z-index: 4; }
+body.toque #botBox { z-index: 5; }
+/* celular estreito: o direcional parado fica acima da hotbar, sem encostar nela */
+@media (max-width: 760px) { #joy { bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 12px); } }
+.bToque { position: absolute; display: grid; place-items: center; align-content: center; border-radius: 50%; border: 3px solid rgba(255, 210, 63, .65); background: rgba(15, 12, 35, .6); color: var(--luz); font: inherit; font-weight: 700; pointer-events: auto; touch-action: none; transition: transform .08s, background .15s; -webkit-tap-highlight-color: transparent; }
 .bToque img { width: 30px; image-rendering: pixelated; }
 .bToque span { font-size: .72em; line-height: 1.1; max-width: 6em; text-align: center; }
 .bToque.apertado { transform: scale(.9); background: rgba(255, 210, 63, .5); }
 #tUsar { right: max(16px, env(safe-area-inset-right)); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 26px); width: 80px; height: 80px; background: rgba(255, 210, 63, .28); border-color: var(--ouro); }
 #tInter { right: calc(max(16px, env(safe-area-inset-right)) + 90px); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 12px); width: 66px; height: 66px; }
-#tInter.vazio { opacity: .4; }
+#tInter.vazio { opacity: .6; }
 #tJutsu { right: calc(max(16px, env(safe-area-inset-right)) + 100px); bottom: calc(max(6px, env(safe-area-inset-bottom)) + var(--hb, 50px) + 88px); width: 46px; height: 46px; font-size: 1.1em; }
 body.toque #botBox { left: auto; bottom: auto; right: max(8px, env(safe-area-inset-right)); top: calc(max(8px, env(safe-area-inset-top)) + clamp(70px, 9vw, 120px) + 4.6em); flex-direction: row-reverse; align-items: flex-start; max-width: 72vw; }
 body.toque #botCabeca { width: 52px; }
@@ -232,8 +239,7 @@ body.toque .grade { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
   .caixaPainel { width: 100%; max-height: 100%; border-width: 3px; }
 }
 @media (max-height: 460px) and (orientation: landscape) {
-  body.toque #joyZona { height: 55%; }
-  body.toque #botBox { top: calc(max(6px, env(safe-area-inset-top)) + 2.4em); right: calc(max(8px, env(safe-area-inset-right)) + 72px); }
+  body.toque #botBox { top: calc(max(6px, env(safe-area-inset-top)) + 2.4em); right: calc(max(8px, env(safe-area-inset-right)) + 72px); max-width: 56vw; }
   body.toque #tutorialCard { display: none; }
   #minimapa { width: 64px; }
 }

@@ -251,6 +251,7 @@ AM.ui = (() => {
   function telaCheia() {
     const d = document;
     if (d.fullscreenElement) d.exitFullscreen && d.exitFullscreen();
+    else if (AM.toqueAtivo && window.deitarTela && window.deitarTela()) { /* tela cheia e deitada */ }
     else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => aviso('Este navegador não deixou abrir em tela cheia.'));
     else aviso('Este navegador não tem tela cheia. No iPhone, use "Adicionar à Tela de Início".');
   }
@@ -263,25 +264,47 @@ AM.ui = (() => {
     document.body.classList.add('toque');
     $('#toque').hidden = false;
     const zona = $('#joyZona'), joy = $('#joy'), bola = joy.querySelector('i'), t = AM.input.toque;
-    let idJoy = null, centro = null;
-    // o direcional aparece onde o dedão encostar (dentro da área da esquerda)
+    // direcional flutuante (igual aos outros jogos): aparece onde o dedão encostar,
+    // na metade esquerda, e vai junto se o dedo for longe. Na borda, corre.
+    const RAIO = 50;
+    let idJoy = null, centro = null, inicio = null;
+    const posicionar = () => {
+      const r = zona.getBoundingClientRect();
+      joy.style.left = (centro.x - r.left - joy.offsetWidth / 2) + 'px';
+      joy.style.top = (centro.y - r.top - joy.offsetHeight / 2) + 'px';
+      joy.style.bottom = 'auto';
+    };
     const mover = e => {
-      let dx = (e.clientX - centro.x) / 52, dy = (e.clientY - centro.y) / 52;
-      const n = Math.hypot(dx, dy); if (n > 1) { dx /= n; dy /= n; }
-      t.x = Math.abs(dx) > .18 ? dx : 0; t.y = Math.abs(dy) > .18 ? dy : 0; t.ativo = true;
-      bola.style.transform = `translate(${dx * 38}px, ${dy * 38}px)`;
+      let dx = e.clientX - centro.x, dy = e.clientY - centro.y, d = Math.hypot(dx, dy);
+      if (d > RAIO * 1.6) {
+        const sobra = d - RAIO * 1.6;
+        centro.x += dx / d * sobra; centro.y += dy / d * sobra; posicionar();
+        dx = e.clientX - centro.x; dy = e.clientY - centro.y; d = Math.hypot(dx, dy);
+      }
+      const lim = Math.min(1, RAIO / Math.max(1, d));
+      bola.style.transform = `translate(${dx * lim}px, ${dy * lim}px)`;
+      const forca = Math.max(0, (Math.min(1, d / RAIO) - .15) / .85);   // zona morta pequena no meio
+      t.x = d ? dx / d * forca : 0; t.y = d ? dy / d * forca : 0; t.ativo = true;
     };
     zona.addEventListener('pointerdown', e => {
       e.preventDefault();
-      idJoy = e.pointerId; zona.setPointerCapture(e.pointerId);
-      const r = zona.getBoundingClientRect();
-      centro = { x: e.clientX, y: e.clientY };
-      joy.style.left = (e.clientX - r.left - 65) + 'px'; joy.style.top = (e.clientY - r.top - 65) + 'px';
-      joy.classList.add('ativo');
+      if (idJoy !== null) return;
+      idJoy = e.pointerId;
+      try { zona.setPointerCapture(e.pointerId); } catch (er) { /* tudo bem */ }
+      centro = { x: e.clientX, y: e.clientY }; inicio = { x: e.clientX, y: e.clientY, t: performance.now() };
+      posicionar(); joy.classList.add('ativo');
       mover(e);
     });
-    zona.addEventListener('pointermove', e => { if (e.pointerId === idJoy) mover(e); });
-    const soltar = e => { if (e.pointerId !== idJoy) return; idJoy = null; t.ativo = false; t.x = t.y = 0; bola.style.transform = ''; joy.classList.remove('ativo'); joy.style.left = joy.style.top = ''; };
+    zona.addEventListener('pointermove', e => { if (e.pointerId === idJoy) { e.preventDefault(); mover(e); } });
+    const soltar = e => {
+      if (e.pointerId !== idJoy) return;
+      idJoy = null; t.ativo = false; t.x = t.y = 0;
+      bola.style.transform = ''; joy.classList.remove('ativo'); joy.style.left = joy.style.top = joy.style.bottom = '';
+      // toque rápido sem arrastar vale como tocar no mundo (falar com alguém, andar até lá)
+      const rapido = inicio && performance.now() - inicio.t < 280 && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) < 12;
+      inicio = null;
+      if (e.type === 'pointerup' && rapido) toqueNoMundo(e.clientX, e.clientY, false);
+    };
     zona.addEventListener('pointerup', soltar); zona.addEventListener('pointercancel', soltar);
     const botao = (el, acao) => {
       el.addEventListener('pointerdown', e => { e.preventDefault(); t.botoes.add(acao); t.novos.add(acao); el.classList.add('apertado'); });

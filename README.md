@@ -8,7 +8,7 @@
 - Código do jogo em `jogo/` (mundo, jogador, criaturas, sistemas, missões, construção, masmorras, render, UI, rede) e servidor em `servidor/`.
 
 ### No celular
-Funciona em pé e deitado. Direcional aparece onde o dedão encosta (empurre até a borda para correr), botão **Usar** mostra o item da mão, e o botão de ação muda sozinho (Falar, Colher, Dormir, Abrir...). Toque num quadrado do lado para agir, toque longe para andar até lá, toque num morador para ir conversar. Menu ☰ tem tela cheia; em Opções → Acessibilidade dá para aproximar o mundo (Zoom).
+O jogo é deitado, igual aos outros jogos: em pé aparece "Gire o celular", e no Android o primeiro toque já entra em tela cheia e vira a tela sozinho (no iPhone, é só girar o celular; "Adicionar à Tela de Início" abre como app). Direcional aparece onde o dedão encosta na metade esquerda e vai junto se o dedo for longe (empurre até a borda para correr), botão **Usar** mostra o item da mão, e o botão de ação muda sozinho (Falar, Colher, Dormir, Abrir...). Toque num quadrado do lado para agir, toque longe para andar até lá, toque num morador para ir conversar. Menu ☰ tem tela cheia; em Opções → Acessibilidade dá para aproximar o mundo (Zoom).
 
 ### Moradores
 Fale com qualquer um (F, botão de ação ou toque). Cada um tem personalidade e falas que mudam com a hora, o clima e a estação. Dê presentes (um por dia): cada um ama, gosta ou odeia certas coisas. Amizade dá corações, desconto na loja e presentes de volta.

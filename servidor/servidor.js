@@ -19,7 +19,7 @@ const MAX_JOGADORES = 8;
 const MAX_MSG = 16 * 1024 * 1024;
 const ia = require('./ia');
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2',
-  '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.json': 'application/json', '.md': 'text/markdown; charset=utf-8' };
+  '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.md': 'text/markdown; charset=utf-8' };
 
 fs.mkdirSync(PASTA_SALAS, { recursive: true });
 

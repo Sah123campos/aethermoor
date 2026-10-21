@@ -220,16 +220,18 @@ AM.jogo = (() => {
     el.id = 'partida';
     el.innerHTML = `<div class="caixaPainel" style="width:min(30em,100%)"><h2>Nova partida</h2>
       <p>Seu nome: <input id="pNome" maxlength="14" value="${(nome || 'Viajante').replace(/"/g, '')}" style="font:inherit;border:2px solid var(--madeira);border-radius:6px;padding:2px 6px;background:#fffaf0"></p>
-      <div class="opcoes">
+      ${AM.servidorOk ? `<div class="opcoes">
         <div class="op"><span>Modo<small>Cooperativo cria uma sala com código para até 8 amigos</small></span><select id="pModo"><option value="solo">Solo</option><option value="coop">Cooperativo</option></select></div>
         <div class="op"><span>Ouro<small>Só faz diferença no cooperativo</small></span><select id="pOuro"><option value="ind">Individual</option><option value="col">Coletivo</option></select></div>
         <div class="op"><span>Construções<small>No cooperativo, quem pode mexer nas construções</small></span><select id="pConstr"><option value="sim">Compartilhadas</option><option value="nao">Privadas</option></select></div>
-      </div>
+      </div>` : ''}
       <button class="btn ouro" id="pIr">Começar em Aethermoor</button></div>`;
-    Object.assign(el.style, { position: 'absolute', inset: '0', display: 'grid', placeItems: 'center', background: 'rgba(8,6,20,.7)', zIndex: 30, padding: '16px' });
+    // flex (e não grid) para a caixa nunca passar da tela: ela rola por dentro se precisar
+    Object.assign(el.style, { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(8,6,20,.7)', zIndex: 30, padding: '12px' });
     $('#palco').appendChild(el);
     el.querySelector('#pIr').onclick = () => {
-      const partida = { modo: el.querySelector('#pModo').value, ouroColetivo: el.querySelector('#pOuro').value === 'col', construcoesCompartilhadas: el.querySelector('#pConstr').value === 'sim' };
+      const v = (id, padrao) => { const c = el.querySelector(id); return c ? c.value : padrao; };
+      const partida = { modo: v('#pModo', 'solo'), ouroColetivo: v('#pOuro', 'ind') === 'col', construcoesCompartilhadas: v('#pConstr', 'sim') === 'sim' };
       const n = el.querySelector('#pNome').value.trim() || 'Viajante';
       el.remove();
       if (typeof Som !== 'undefined') Som.iniciar();
@@ -241,6 +243,10 @@ AM.jogo = (() => {
     pausaCurta: s => { pausaAte = performance.now() + s * 1000; } };
 })();
 
+// o modo online precisa do servidor do jogo (node servidor/servidor.js). Aberto do
+// arquivo, a pessoa informa o endereço; num site sem servidor (GitHub Pages) fica só o solo.
+AM.servidorOk = !location.protocol.startsWith('http');
+
 // botões da tela inicial e atalhos de teste (?jogo começa direto, ?continuar carrega)
 addEventListener('DOMContentLoaded', () => {
   const b = document.querySelector('#btnContinuar');
@@ -248,10 +254,15 @@ addEventListener('DOMContentLoaded', () => {
     b.hidden = false;
     b.onclick = () => { if (typeof Som !== 'undefined') Som.iniciar(); document.querySelector('#inicio').hidden = true; AM.jogo.continuar(); };
   }
-  // entrar na sala de um amigo direto da tela inicial
+  // entrar na sala de um amigo direto da tela inicial (só aparece se o servidor do jogo estiver rodando)
   const box = b.parentElement, bs = document.createElement('button');
   bs.className = 'grande secundario'; bs.id = 'btnSala'; bs.textContent = 'Entrar numa sala';
+  bs.hidden = !AM.servidorOk;
   box.appendChild(bs);
+  if (!AM.servidorOk) {
+    fetch('/api/doidobot', { signal: AbortSignal.timeout(3000) }).then(r => r.json())
+      .then(() => { AM.servidorOk = true; bs.hidden = false; }).catch(() => { /* sem servidor (ex.: GitHub Pages): jogo solo */ });
+  }
   bs.onclick = () => {
     const local = !location.protocol.startsWith('http');
     const f = document.createElement('form');

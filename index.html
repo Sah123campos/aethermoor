@@ -6,6 +6,13 @@
 <title>Despertar em Aethermoor</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0b0d1c">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aethermoor">
+<link rel="icon" href="assets/icone-192.png">
+<link rel="apple-touch-icon" href="assets/icone-180.png">
 <link rel="stylesheet" href="jogo/jogo.css">
 <style>
 /* Palco 16:9 de pixel art no centro; o diálogo de pergaminho fica sobre a base
@@ -247,6 +254,31 @@ input::placeholder, textarea::placeholder { color: #9a7a58; opacity: 1; }
 @keyframes carimbo { from { opacity: 0; transform: scale(2.4) rotate(-20deg); } }
 @keyframes pof { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-12deg); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(-6deg); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -90%) scale(1) rotate(-6deg); } }
 
+/* celular deitado: o palco ocupa a tela toda */
+@media (pointer: coarse) and (orientation: landscape) {
+  body { padding: 0; }
+  #jogo { width: min(100%, calc(100dvh * 16 / 9)); }
+  #palco { border-radius: 0; box-shadow: none; }
+}
+
+/* celular em pé: pede para girar (o jogo é deitado, igual aos outros jogos) */
+#girar {
+  position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; text-align: center; color: var(--luz); font-size: 22px;
+  background: radial-gradient(ellipse at 50% 60%, #1b1f4a 0%, #07081a 70%);
+}
+#girar p { margin: 0; font-weight: 700; color: var(--ouro); text-shadow: 0 2px 0 var(--madeira); }
+#girar small { color: #c9c5ef; font-size: 15px; max-width: 24em; }
+#girar .grande { margin-top: 16px; max-width: 86vw; }
+.girarCena { display: flex; align-items: center; gap: 22px; margin-bottom: 14px; }
+#girarBot { width: 92px; aspect-ratio: 1; }
+.girarCelular { position: relative; width: 46px; height: 80px; border: 4px solid var(--ouro); border-radius: 8px; animation: girarCel 2.2s ease-in-out infinite; }
+.girarCelular::after { content: ""; position: absolute; left: 50%; bottom: 4px; width: 8px; height: 4px; margin-left: -4px; background: var(--ouro); }
+@keyframes girarCel { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (orientation: portrait) and (pointer: coarse) {
+  #girar { display: flex; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
@@ -349,6 +381,14 @@ input::placeholder, textarea::placeholder { color: #9a7a58; opacity: 1; }
   <div id="recado" hidden><div class="mini"></div><span></span></div>
 </div>
 
+<!-- girar o celular -->
+<div id="girar" role="alertdialog" aria-labelledby="girarTitulo" aria-describedby="girarDica">
+  <div class="girarCena" aria-hidden="true"><div id="girarBot"></div><div class="girarCelular"></div></div>
+  <p id="girarTitulo">Gire o celular para jogar</p>
+  <small id="girarDica">Aethermoor é jogado com a tela deitada.</small>
+  <button class="grande" id="btnGirar" hidden>Virar a tela e jogar</button>
+</div>
+
 <script src="js/motor.js"></script>
 <script src="js/som.js"></script>
 <script src="js/cenario.js"></script>
@@ -377,5 +417,6 @@ input::placeholder, textarea::placeholder { color: #9a7a58; opacity: 1; }
 <script src="jogo/paineis.js"></script>
 <script src="jogo/rede.js"></script>
 <script src="jogo/principal.js"></script>
+<script src="jogo/celular.js"></script>
 </body>
 </html>
